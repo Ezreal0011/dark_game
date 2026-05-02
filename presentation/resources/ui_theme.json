@@ -1,0 +1,21 @@
+{
+  "palette": {
+    "panel_bg": "#04111CCC",
+    "panel_border": "#00D9FFFF",
+    "text_primary": "#E6F7FFFF",
+    "text_muted": "#8AB6C8FF",
+    "accent_blue": "#00C8FFFF",
+    "accent_orange": "#FF7A1AFF",
+    "accent_purple": "#C35BFFFF",
+    "danger_red": "#FF3B35FF"
+  },
+  "font_sizes": {
+    "small": 12,
+    "body": 16,
+    "title": 24
+  },
+  "spacing": {
+    "panel_padding": 12,
+    "item_gap": 8
+  }
+}

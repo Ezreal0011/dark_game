@@ -1,6 +1,8 @@
 class_name HUD
 extends CanvasLayer
 
+const ICON_MANIFEST := "res://presentation/resources/icon_manifest.json"
+
 signal wait_pressed
 signal scan_pressed
 signal attack_pressed
@@ -43,7 +45,16 @@ signal gm_toggled(enabled: bool)
 @onready var center_notice: Label = $Root/CenterNotice
 @onready var mini_map_label: Label = $Root/MiniMapPanel/MiniMapLabel
 
+var action_button_row: HBoxContainer
+var left_info_panel: PanelContainer
+var left_info_label: Label
+var icon_manifest: Dictionary = {}
+
 func _ready() -> void:
+	icon_manifest = _load_json(ICON_MANIFEST)
+	_apply_m9_layout()
+	_apply_m9_theme()
+	_apply_m9_icons()
 	wait_button.pressed.connect(func() -> void: wait_pressed.emit())
 	scan_button.pressed.connect(func() -> void: scan_pressed.emit())
 	attack_button.pressed.connect(func() -> void: attack_pressed.emit())
@@ -183,8 +194,175 @@ func set_tech_buttons_state(can_scout: bool, can_move: bool, can_stealth: bool) 
 func is_screen_point_over_hud(screen_point: Vector2) -> bool:
 	var viewport_size := get_viewport().get_visible_rect().size
 	var in_top := screen_point.y < 64.0
-	var in_bottom := screen_point.y > viewport_size.y - 132.0
-	var in_log := screen_point.x > viewport_size.x - 360.0 and screen_point.y < 390.0
-	var in_tech := screen_point.x < 310.0 and screen_point.y > 64.0 and screen_point.y < 280.0
+	var in_bottom := screen_point.x > 330.0 and screen_point.x < viewport_size.x - 330.0 and screen_point.y > viewport_size.y - 64.0
+	var in_log := false
+	var in_left := screen_point.x < 150.0 and screen_point.y > 64.0 and screen_point.y < 200.0
+	var in_tech := screen_point.x > viewport_size.x - 160.0 and screen_point.y > 52.0 and screen_point.y < 266.0
 	var in_choice := skill_choice_panel.visible and screen_point.x > viewport_size.x * 0.5 - 270.0 and screen_point.x < viewport_size.x * 0.5 + 270.0 and screen_point.y > viewport_size.y * 0.5 - 140.0 and screen_point.y < viewport_size.y * 0.5 + 150.0
-	return in_top or in_bottom or in_log or in_tech or in_choice
+	return in_top or in_bottom or in_log or in_left or in_tech or in_choice
+
+func _apply_m9_layout() -> void:
+	_rebuild_left_info_panel()
+	_layout_top_bar()
+	_layout_bottom_action_bar()
+	_layout_right_tech_panel()
+	_layout_minimap()
+	_layout_log_panel()
+
+func _rebuild_left_info_panel() -> void:
+	if left_info_panel != null:
+		return
+	left_info_panel = PanelContainer.new()
+	left_info_panel.name = "LeftInfoPanel"
+	left_info_panel.mouse_filter = Control.MOUSE_FILTER_PASS
+	left_info_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	left_info_panel.offset_left = 16.0
+	left_info_panel.offset_top = 72.0
+	left_info_panel.offset_right = 138.0
+	left_info_panel.offset_bottom = 188.0
+	$Root.add_child(left_info_panel)
+	left_info_label = Label.new()
+	left_info_label.name = "LeftInfoLabel"
+	left_info_label.text = "控制条件：存活至最后\n剩余玩家：1\n快捷键：Tab 背包  L 科技栈  U 隐藏界面"
+	left_info_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	left_info_label.text = "存活至最后\n玩家 1\nTab 背包\nL 科技"
+	left_info_label.add_theme_font_size_override("font_size", 15)
+	left_info_label.add_theme_color_override("font_color", Color(0.86, 0.96, 1.0, 1.0))
+	left_info_panel.add_child(left_info_label)
+
+func _layout_top_bar() -> void:
+	var top_bar: HBoxContainer = $Root/TopBar
+	top_bar.offset_left = 318.0
+	top_bar.offset_top = 8.0
+	top_bar.offset_right = -318.0
+	top_bar.offset_bottom = 48.0
+	top_bar.alignment = BoxContainer.ALIGNMENT_CENTER
+	top_bar.add_theme_constant_override("separation", 22)
+
+func _layout_bottom_action_bar() -> void:
+	var bottom_bar: VBoxContainer = $Root/BottomBar
+	bottom_bar.offset_left = 340.0
+	bottom_bar.offset_top = -56.0
+	bottom_bar.offset_right = -340.0
+	bottom_bar.offset_bottom = -6.0
+	if action_button_row == null:
+		action_button_row = HBoxContainer.new()
+		action_button_row.name = "ActionButtonRow"
+		action_button_row.alignment = BoxContainer.ALIGNMENT_CENTER
+		action_button_row.add_theme_constant_override("separation", 12)
+		bottom_bar.add_child(action_button_row)
+		bottom_bar.move_child(action_button_row, 0)
+	for button in [wait_button, scan_button, attack_button, collect_button, pick_skill_button, end_turn_button]:
+		var parent: Node = button.get_parent()
+		if parent != action_button_row:
+			parent.remove_child(button)
+			action_button_row.add_child(button)
+		button.custom_minimum_size = Vector2(74, 46)
+		button.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
+		button.expand_icon = true
+	wait_button.text = "待机\n+1"
+	scan_button.text = "扫描\n-2"
+	attack_button.text = "攻击\n-3"
+	collect_button.text = "采集\n资源"
+	pick_skill_button.text = "技能\n拾取"
+	end_turn_button.text = "结束\n回合"
+	wait_button.text = "待机 +1"
+	scan_button.text = "扫描 -2"
+	attack_button.text = "攻击 -3"
+	collect_button.text = "采集"
+	pick_skill_button.text = "技能"
+	end_turn_button.text = "结束"
+
+func _layout_right_tech_panel() -> void:
+	tech_summary_label.text = "科技栈"
+	var tech_panel: PanelContainer = $Root/TechPanel
+	tech_panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	tech_panel.offset_left = -148.0
+	tech_panel.offset_top = 58.0
+	tech_panel.offset_right = -16.0
+	tech_panel.offset_bottom = 252.0
+	for button in [gm_button, scout_tech_button, move_tech_button, stealth_tech_button]:
+		button.custom_minimum_size = Vector2(108, 34)
+
+func _layout_minimap() -> void:
+	var panel: PanelContainer = $Root/MiniMapPanel
+	panel.offset_left = -148.0
+	panel.offset_top = -156.0
+	panel.offset_right = -16.0
+	panel.offset_bottom = -24.0
+	mini_map_label.custom_minimum_size = Vector2(108, 112)
+
+func _layout_log_panel() -> void:
+	var panel: PanelContainer = $Root/LogPanel
+	panel.visible = false
+
+func _apply_m9_theme() -> void:
+	_style_panel($Root/TechPanel)
+	_style_panel($Root/MiniMapPanel)
+	_style_panel($Root/LogPanel)
+	_style_panel($Root/SkillChoicePanel)
+	if left_info_panel != null:
+		_style_panel(left_info_panel)
+	for button in [wait_button, scan_button, attack_button, collect_button, pick_skill_button, end_turn_button, gm_button, scout_tech_button, move_tech_button, stealth_tech_button]:
+		_style_button(button, Color(0.0, 0.78, 1.0, 1.0))
+	for button in skill_slot_buttons:
+		_style_button(button, Color(0.72, 0.35, 1.0, 1.0))
+
+func _style_panel(panel: Control) -> void:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.015, 0.06, 0.10, 0.78)
+	style.border_color = Color(0.0, 0.78, 1.0, 0.70)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	style.content_margin_left = 12
+	style.content_margin_right = 12
+	style.content_margin_top = 10
+	style.content_margin_bottom = 10
+	panel.add_theme_stylebox_override("panel", style)
+
+func _style_button(button: Button, accent: Color) -> void:
+	button.add_theme_stylebox_override("normal", _button_style(Color(0.01, 0.06, 0.10, 0.88), accent, 0.62))
+	button.add_theme_stylebox_override("hover", _button_style(Color(0.02, 0.12, 0.18, 0.92), accent, 1.0))
+	button.add_theme_stylebox_override("pressed", _button_style(Color(0.02, 0.18, 0.24, 0.96), accent, 1.0))
+	button.add_theme_stylebox_override("disabled", _button_style(Color(0.015, 0.025, 0.035, 0.58), Color(0.22, 0.32, 0.38, 1.0), 0.40))
+	button.add_theme_color_override("font_color", Color(0.82, 0.96, 1.0, 1.0))
+	button.add_theme_color_override("font_disabled_color", Color(0.38, 0.48, 0.52, 1.0))
+	button.add_theme_font_size_override("font_size", 15)
+
+func _button_style(bg: Color, border: Color, alpha: float) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = bg
+	style.border_color = Color(border.r, border.g, border.b, alpha)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(6)
+	style.content_margin_left = 8
+	style.content_margin_right = 8
+	style.content_margin_top = 6
+	style.content_margin_bottom = 6
+	return style
+
+func _apply_m9_icons() -> void:
+	var actions: Dictionary = icon_manifest.get("actions", {})
+	var tech: Dictionary = icon_manifest.get("tech", {})
+	_set_button_icon(wait_button, String(actions.get("move", "")))
+	_set_button_icon(scan_button, String(actions.get("scan", "")))
+	_set_button_icon(attack_button, String(actions.get("attack", "")))
+	_set_button_icon(collect_button, String(actions.get("bag", "")))
+	_set_button_icon(pick_skill_button, String(actions.get("tech", "")))
+	_set_button_icon(end_turn_button, String(actions.get("overclock", "")))
+	_set_button_icon(scout_tech_button, String(tech.get("recon", "")))
+	_set_button_icon(move_tech_button, String(actions.get("move", "")))
+	_set_button_icon(stealth_tech_button, String(tech.get("stealth", "")))
+
+func _set_button_icon(button: Button, path: String) -> void:
+	if path == "" or not ResourceLoader.exists(path):
+		return
+	button.icon = load(path)
+	button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+
+func _load_json(path: String) -> Dictionary:
+	if not FileAccess.file_exists(path):
+		return {}
+	var file := FileAccess.open(path, FileAccess.READ)
+	var parsed = JSON.parse_string(file.get_as_text())
+	return parsed if typeof(parsed) == TYPE_DICTIONARY else {}

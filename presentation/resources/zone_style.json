@@ -1,0 +1,22 @@
+{
+  "safe": {
+    "fill": "#003B5A22",
+    "border": "#00C8FFFF",
+    "label": "安全区"
+  },
+  "silent": {
+    "fill": "#006DAD33",
+    "border": "#00B8FFFF",
+    "label": "静默区"
+  },
+  "echo": {
+    "fill": "#B75A0033",
+    "border": "#FF7A1AFF",
+    "label": "回声区"
+  },
+  "black": {
+    "fill": "#5A050538",
+    "border": "#FF3B35FF",
+    "label": "黑域"
+  }
+}

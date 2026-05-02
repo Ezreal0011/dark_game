@@ -6,6 +6,7 @@ extends Node2D
 @onready var signal_manager: SignalManager = $SignalManager
 @onready var skill_manager: Node = $SkillManager
 @onready var npc_ai_controller: Node = $NpcAIController
+@onready var presentation: Node = $Presentation
 @onready var grid_map: DarkSignalGridMap = $GridMap
 @onready var move_options_layer: Node2D = $GridMap/MoveOptions
 @onready var signal_layer: Node2D = $GridMap/SignalLayer
@@ -64,6 +65,8 @@ func _ready() -> void:
 	_update_npc_markers()
 	_redraw_map_points()
 	_redraw_signals()
+	_bind_presentation()
+	_refresh_presentation()
 	hud.setup(String(config.get("game_title", "暗林信号")), turn_manager.current_turn, turn_manager.dark_energy, turn_manager.max_dark_energy, _living_npc_count())
 	hud.wait_pressed.connect(_on_wait_pressed)
 	hud.scan_pressed.connect(_on_scan_pressed)
@@ -1006,6 +1009,7 @@ func _apply_collapse_for_current_turn() -> Dictionary:
 	var before_hp := player_hp
 	if _should_collapse_now() and grid_map.advance_collapse():
 		hud.add_log("黑域收缩一层：%s。" % grid_map.get_safe_bounds_text())
+	_refresh_presentation()
 	var stage := grid_map.get_collapse_layer()
 	if stage > 0:
 		_apply_black_domain_to_npcs(stage)
@@ -1074,3 +1078,11 @@ func _play_attack_feedback(target_tile: Vector2i, hit: bool) -> void:
 	tween.parallel().tween_property(ring, "modulate:a", 0.0, 0.28)
 	tween.tween_callback(flash.queue_free)
 	tween.tween_callback(ring.queue_free)
+
+func _bind_presentation() -> void:
+	if presentation != null and presentation.has_method("bind_game"):
+		presentation.bind_game(self, grid_map)
+
+func _refresh_presentation() -> void:
+	if presentation != null and presentation.has_method("refresh_all"):
+		presentation.refresh_all()

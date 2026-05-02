@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=21 format=3]
 
 [ext_resource type="Script" path="res://scripts/game_controller.gd" id="1_game_controller"]
 [ext_resource type="Script" path="res://scripts/config_loader.gd" id="2_config_loader"]
@@ -9,6 +9,18 @@
 [ext_resource type="Script" path="res://scripts/signal_manager.gd" id="7_signal_manager"]
 [ext_resource type="Script" path="res://scripts/skill_manager.gd" id="8_skill_manager"]
 [ext_resource type="Script" path="res://scripts/npc_ai_controller.gd" id="9_npc_ai"]
+[ext_resource type="Script" path="res://presentation/controllers/battle_view_controller.gd" id="10_battle_view"]
+[ext_resource type="Script" path="res://presentation/layers/background_layer.gd" id="11_background_layer"]
+[ext_resource type="Script" path="res://presentation/layers/grid_visual_layer.gd" id="12_grid_visual_layer"]
+[ext_resource type="Script" path="res://presentation/layers/zone_visual_layer.gd" id="13_zone_visual_layer"]
+[ext_resource type="Script" path="res://presentation/layers/point_visual_layer.gd" id="14_point_visual_layer"]
+[ext_resource type="Script" path="res://presentation/layers/unit_visual_layer.gd" id="15_unit_visual_layer"]
+[ext_resource type="Script" path="res://presentation/layers/action_preview_layer.gd" id="16_action_preview_layer"]
+[ext_resource type="Script" path="res://presentation/layers/fx_layer.gd" id="17_fx_layer"]
+[ext_resource type="Script" path="res://presentation/controllers/hud_controller.gd" id="18_hud_controller"]
+[ext_resource type="Script" path="res://presentation/controllers/fx_controller.gd" id="19_fx_controller"]
+[ext_resource type="Script" path="res://presentation/controllers/minimap_controller.gd" id="20_minimap_controller"]
+[ext_resource type="PackedScene" path="res://presentation/ui/HUDRoot.tscn" id="21_hud_root"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_game_controller")
@@ -28,8 +40,42 @@ script = ExtResource("8_skill_manager")
 [node name="NpcAIController" type="Node" parent="."]
 script = ExtResource("9_npc_ai")
 
+[node name="Presentation" type="Node" parent="."]
+script = ExtResource("10_battle_view")
+
+[node name="BackgroundLayer" type="Node2D" parent="Presentation"]
+script = ExtResource("11_background_layer")
+
+[node name="GridVisualLayer" type="Node2D" parent="Presentation"]
+script = ExtResource("12_grid_visual_layer")
+
+[node name="ZoneVisualLayer" type="Node2D" parent="Presentation"]
+script = ExtResource("13_zone_visual_layer")
+
+[node name="PointVisualLayer" type="Node2D" parent="Presentation"]
+script = ExtResource("14_point_visual_layer")
+
+[node name="UnitVisualLayer" type="Node2D" parent="Presentation"]
+script = ExtResource("15_unit_visual_layer")
+
+[node name="ActionPreviewLayer" type="Node2D" parent="Presentation"]
+script = ExtResource("16_action_preview_layer")
+
+[node name="FxLayer" type="Node2D" parent="Presentation"]
+script = ExtResource("17_fx_layer")
+
+[node name="HUDController" type="Node" parent="Presentation"]
+script = ExtResource("18_hud_controller")
+
+[node name="FxController" type="Node" parent="Presentation"]
+script = ExtResource("19_fx_controller")
+
+[node name="MiniMapController" type="Node" parent="Presentation"]
+script = ExtResource("20_minimap_controller")
+
 [node name="GridMap" type="TileMapLayer" parent="."]
-position = Vector2(160, 96)
+position = Vector2(279, 116)
+scale = Vector2(0.78, 0.78)
 tile_set = ExtResource("4_grid_tileset")
 script = ExtResource("6_grid_map")
 
@@ -57,6 +103,8 @@ polygon = PackedVector2Array(0, -15, 14, 13, -14, 13)
 [node name="NPCs" type="Node2D" parent="GridMap"]
 
 [node name="HUD" parent="." instance=ExtResource("5_hud")]
+
+[node name="HUDRoot" parent="." instance=ExtResource("21_hud_root")]
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(640, 400)

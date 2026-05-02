@@ -1,0 +1,19 @@
+{
+  "actions": {
+    "move": "res://assets/ui/icons/icon_action_move.png",
+    "scan": "res://assets/ui/icons/icon_action_scan.png",
+    "stealth": "res://assets/ui/icons/icon_action_stealth.png",
+    "interfere": "res://assets/ui/icons/icon_action_interfere.png",
+    "attack": "res://assets/ui/icons/icon_action_attack.png",
+    "overclock": "res://assets/ui/icons/icon_action_overclock.png",
+    "bag": "res://assets/ui/icons/icon_action_bag.png",
+    "tech": "res://assets/ui/icons/icon_action_tech.png"
+  },
+  "tech": {
+    "stealth": "res://assets/ui/icons/icon_tech_stealth.png",
+    "recon": "res://assets/ui/icons/icon_tech_recon.png",
+    "shock": "res://assets/ui/icons/icon_tech_shock.png"
+  },
+  "zones": {},
+  "minimap": {}
+}

@@ -1,0 +1,38 @@
+{
+  "backgrounds": {
+    "space_main": "res://assets/backgrounds/bg_space_main.png",
+    "nebula_01": "res://assets/backgrounds/bg_nebula_01.png",
+    "nebula_02": "res://assets/backgrounds/bg_nebula_02.png",
+    "nebula_03": "res://assets/backgrounds/bg_nebula_03.png"
+  },
+  "decorations": {
+    "asteroids": [
+      "res://assets/decorations/deco_asteroid_01.png",
+      "res://assets/decorations/deco_asteroid_02.png",
+      "res://assets/decorations/deco_asteroid_03.png",
+      "res://assets/decorations/deco_asteroid_04.png",
+      "res://assets/decorations/deco_asteroid_05.png",
+      "res://assets/decorations/deco_asteroid_06.png",
+      "res://assets/decorations/deco_asteroid_07.png",
+      "res://assets/decorations/deco_asteroid_08.png",
+      "res://assets/decorations/deco_asteroid_09.png",
+      "res://assets/decorations/deco_asteroid_10.png",
+      "res://assets/decorations/deco_asteroid_11.png",
+      "res://assets/decorations/deco_asteroid_12.png"
+    ],
+    "wrecks": [
+      "res://assets/decorations/deco_wreck_01.png",
+      "res://assets/decorations/deco_wreck_02.png",
+      "res://assets/decorations/deco_wreck_03.png",
+      "res://assets/decorations/deco_wreck_04.png",
+      "res://assets/decorations/deco_wreck_05.png",
+      "res://assets/decorations/deco_wreck_06.png",
+      "res://assets/decorations/deco_wreck_07.png",
+      "res://assets/decorations/deco_wreck_08.png"
+    ]
+  },
+  "points": {},
+  "units": {},
+  "fx": {},
+  "minimap": {}
+}
