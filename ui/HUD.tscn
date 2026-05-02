@@ -1,0 +1,142 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/hud.gd" id="1_hud_script"]
+
+[node name="HUD" type="CanvasLayer"]
+script = ExtResource("1_hud_script")
+
+[node name="Root" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="TopBar" type="HBoxContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 12.0
+offset_right = -16.0
+offset_bottom = 50.0
+grow_horizontal = 2
+theme_override_constants/separation = 18
+mouse_filter = 2
+
+[node name="TitleLabel" type="Label" parent="Root/TopBar"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.72, 0.93, 1, 1)
+text = "暗林信号"
+
+[node name="TurnLabel" type="Label" parent="Root/TopBar"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.86, 0.94, 1, 1)
+text = "回合：1"
+
+[node name="EnergyLabel" type="Label" parent="Root/TopBar"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.86, 0.94, 1, 1)
+text = "暗能：4/10"
+
+[node name="UnitLabel" type="Label" parent="Root/TopBar"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.86, 0.94, 1, 1)
+text = "NPC：3"
+
+[node name="ModeLabel" type="Label" parent="Root/TopBar"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.95, 0.86, 0.55, 1)
+text = "模式：移动"
+
+[node name="WaitButton" type="Button" parent="Root/TopBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(76, 36)
+text = "等待"
+
+[node name="ScanButton" type="Button" parent="Root/TopBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(76, 36)
+text = "扫描"
+
+[node name="AttackButton" type="Button" parent="Root/TopBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(76, 36)
+text = "攻击"
+
+[node name="EndTurnButton" type="Button" parent="Root/TopBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(110, 36)
+text = "结束回合"
+
+[node name="CenterNotice" type="Label" parent="Root"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -180.0
+offset_top = -42.0
+offset_right = 180.0
+offset_bottom = 42.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 34
+theme_override_colors/font_color = Color(0.9, 0.98, 1, 1)
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "你的回合"
+
+[node name="LogPanel" type="PanelContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -360.0
+offset_top = 72.0
+offset_right = -16.0
+offset_bottom = 390.0
+grow_horizontal = 0
+mouse_filter = 2
+
+[node name="LogBox" type="RichTextLabel" parent="Root/LogPanel"]
+layout_mode = 2
+bbcode_enabled = false
+scroll_following = true
+theme_override_colors/default_color = Color(0.76, 0.9, 1, 1)
+
+[node name="BottomBar" type="VBoxContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = -82.0
+offset_right = -16.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_constants/separation = 8
+mouse_filter = 2
+
+[node name="HoverLabel" type="Label" parent="Root/BottomBar"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 17
+theme_override_colors/font_color = Color(0.8, 0.92, 1, 1)
+text = "悬停格：无"
+
+[node name="ActionHintLabel" type="Label" parent="Root/BottomBar"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 17
+theme_override_colors/font_color = Color(0.95, 0.86, 0.55, 1)
+text = "左键点击相邻可通行格移动。"

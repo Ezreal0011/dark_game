@@ -1,0 +1,23 @@
+{
+  "game_title": "暗林信号",
+  "map_width": 24,
+  "map_height": 16,
+  "tile_size": 40,
+  "initial_turn": 1,
+  "initial_dark_energy": 4,
+  "max_dark_energy": 10,
+  "energy_per_turn": 2,
+  "wait_energy_bonus": 1,
+  "move_cost": 1,
+  "scan_cost": 2,
+  "attack_cost": 3,
+  "scan_range": 3,
+  "attack_range": 4,
+  "move_signal_duration": 3,
+  "scan_signal_duration": 2,
+  "attack_signal_duration": 2,
+  "player_start_x": 2,
+  "player_start_y": 2,
+  "npc_count": 3,
+  "use_authored_map": false
+}
