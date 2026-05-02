@@ -1,0 +1,28 @@
+{
+  "techs": {
+    "scout": {
+      "name": "侦察",
+      "levels": [
+        {"level": 1, "cost": 0, "scan_range_bonus": 0},
+        {"level": 2, "cost": 5, "scan_range_bonus": 1},
+        {"level": 3, "cost": 8, "scan_range_bonus": 2}
+      ]
+    },
+    "move": {
+      "name": "移动",
+      "levels": [
+        {"level": 1, "cost": 0, "move_range_bonus": 0},
+        {"level": 2, "cost": 5, "move_range_bonus": 1},
+        {"level": 3, "cost": 8, "move_range_bonus": 2}
+      ]
+    },
+    "stealth": {
+      "name": "隐匿",
+      "levels": [
+        {"level": 1, "cost": 0, "signal_reduction": 0},
+        {"level": 2, "cost": 5, "signal_reduction": 1},
+        {"level": 3, "cost": 8, "signal_reduction": 2}
+      ]
+    }
+  }
+}

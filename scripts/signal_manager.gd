@@ -4,6 +4,8 @@ extends Node
 var move_signal_duration := 3
 var scan_signal_duration := 2
 var attack_signal_duration := 2
+var collect_signal_duration := 3
+var skill_pick_signal_duration := 3
 
 var signals: Array[Dictionary] = []
 
@@ -11,6 +13,8 @@ func setup(config: Dictionary) -> void:
 	move_signal_duration = int(config.get("move_signal_duration", move_signal_duration))
 	scan_signal_duration = int(config.get("scan_signal_duration", scan_signal_duration))
 	attack_signal_duration = int(config.get("attack_signal_duration", attack_signal_duration))
+	collect_signal_duration = int(config.get("collect_signal_duration", collect_signal_duration))
+	skill_pick_signal_duration = int(config.get("skill_pick_signal_duration", skill_pick_signal_duration))
 
 func add_signal(signal_type: String, tile: Vector2i, strength: int, duration: int, public_signal: bool = false) -> void:
 	signals.append({
@@ -21,14 +25,20 @@ func add_signal(signal_type: String, tile: Vector2i, strength: int, duration: in
 		"public": public_signal
 	})
 
-func add_move_signal(tile: Vector2i) -> void:
-	add_signal("move", tile, 1, move_signal_duration)
+func add_move_signal(tile: Vector2i, public_signal: bool = false) -> void:
+	add_signal("move", tile, 1, move_signal_duration, public_signal)
 
 func add_scan_signal(tile: Vector2i) -> void:
 	add_signal("scan", tile, 3, scan_signal_duration)
 
 func add_attack_signal(tile: Vector2i) -> void:
 	add_signal("attack", tile, 4, attack_signal_duration)
+
+func add_collect_signal(tile: Vector2i, public_signal: bool = false) -> void:
+	add_signal("collect", tile, 3, collect_signal_duration, public_signal)
+
+func add_skill_pick_signal(tile: Vector2i, level: int, public_signal: bool = false) -> void:
+	add_signal("skill_pick", tile, clampi(level + 1, 2, 5), skill_pick_signal_duration, public_signal)
 
 func decay_signals() -> void:
 	var kept: Array[Dictionary] = []
@@ -57,4 +67,12 @@ func get_signal_color(signal_type: String) -> Color:
 		return Color(0.72, 0.35, 1.0, 0.52)
 	if signal_type == "death":
 		return Color(1.0, 0.0, 0.0, 0.78)
+	if signal_type == "collect":
+		return Color(1.0, 0.82, 0.18, 0.62)
+	if signal_type == "skill_pick":
+		return Color(0.88, 0.25, 1.0, 0.62)
+	if signal_type == "skill":
+		return Color(0.95, 0.24, 1.0, 0.58)
+	if signal_type == "echo":
+		return Color(1.0, 0.46, 0.12, 0.70)
 	return Color(0.15, 0.65, 1.0, 0.42)

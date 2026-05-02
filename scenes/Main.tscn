@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/game_controller.gd" id="1_game_controller"]
 [ext_resource type="Script" path="res://scripts/config_loader.gd" id="2_config_loader"]
@@ -7,6 +7,8 @@
 [ext_resource type="PackedScene" path="res://ui/HUD.tscn" id="5_hud"]
 [ext_resource type="Script" path="res://scripts/grid_map.gd" id="6_grid_map"]
 [ext_resource type="Script" path="res://scripts/signal_manager.gd" id="7_signal_manager"]
+[ext_resource type="Script" path="res://scripts/skill_manager.gd" id="8_skill_manager"]
+[ext_resource type="Script" path="res://scripts/npc_ai_controller.gd" id="9_npc_ai"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_game_controller")
@@ -20,6 +22,12 @@ script = ExtResource("3_turn_manager")
 [node name="SignalManager" type="Node" parent="."]
 script = ExtResource("7_signal_manager")
 
+[node name="SkillManager" type="Node" parent="."]
+script = ExtResource("8_skill_manager")
+
+[node name="NpcAIController" type="Node" parent="."]
+script = ExtResource("9_npc_ai")
+
 [node name="GridMap" type="TileMapLayer" parent="."]
 position = Vector2(160, 96)
 tile_set = ExtResource("4_grid_tileset")
@@ -30,6 +38,12 @@ script = ExtResource("6_grid_map")
 [node name="SignalLayer" type="Node2D" parent="GridMap"]
 
 [node name="ScanRangeLayer" type="Node2D" parent="GridMap"]
+
+[node name="PointLayer" type="Node2D" parent="GridMap"]
+
+[node name="AttackFeedbackLayer" type="Node2D" parent="GridMap"]
+
+[node name="SkillPreviewLayer" type="Node2D" parent="GridMap"]
 
 [node name="MovePreview" type="Polygon2D" parent="GridMap"]
 visible = false

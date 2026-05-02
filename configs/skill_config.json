@@ -1,0 +1,173 @@
+{
+  "skill_slots": 3,
+  "skill_pools": {
+    "1": ["fake_step", "short_backstep", "signal_decoy"],
+    "2": ["line_snipe", "signal_shield", "smoke_escape"],
+    "3": ["shock_blast", "short_blink", "reverse_trace"],
+    "4": ["delay_mine", "jam_cloud", "heavy_decoy"]
+  },
+  "skills": [
+    {
+      "id": "fake_step",
+      "name": "假脚步",
+      "type": "干扰",
+      "cost": 2,
+      "cooldown": 2,
+      "range": 4,
+      "shape": "point",
+      "signal_strength": 2,
+      "signal_duration": 2,
+      "description": "在指定区域制造一次移动假信号。"
+    },
+    {
+      "id": "line_snipe",
+      "name": "直线狙击",
+      "type": "攻击",
+      "cost": 4,
+      "cooldown": 2,
+      "range": 6,
+      "shape": "line",
+      "signal_strength": 4,
+      "signal_duration": 2,
+      "description": "沿直线攻击一个预测格。"
+    },
+    {
+      "id": "signal_shield",
+      "name": "信号护盾",
+      "type": "防御",
+      "cost": 3,
+      "cooldown": 3,
+      "range": 0,
+      "shape": "self",
+      "signal_strength": 2,
+      "signal_duration": 2,
+      "description": "降低下一次暴露强度。"
+    },
+    {
+      "id": "short_backstep",
+      "name": "短距后撤",
+      "type": "逃生",
+      "cost": 2,
+      "cooldown": 2,
+      "range": 1,
+      "shape": "self",
+      "signal_strength": 2,
+      "signal_duration": 2,
+      "description": "向远离最近威胁的方向后撤一格。"
+    },
+    {
+      "id": "signal_decoy",
+      "name": "信号诱饵",
+      "type": "干扰",
+      "cost": 2,
+      "cooldown": 2,
+      "range": 4,
+      "shape": "area",
+      "radius": 1,
+      "signal_strength": 2,
+      "signal_duration": 2,
+      "description": "在目标区域制造诱饵信号。"
+    },
+    {
+      "id": "smoke_escape",
+      "name": "烟幕脱离",
+      "type": "逃生",
+      "cost": 3,
+      "cooldown": 3,
+      "range": 2,
+      "shape": "area",
+      "radius": 1,
+      "signal_strength": 3,
+      "signal_duration": 2,
+      "description": "在自身周围制造烟幕信号并准备脱离。"
+    },
+    {
+      "id": "shock_blast",
+      "name": "震荡爆破",
+      "type": "攻击",
+      "cost": 4,
+      "cooldown": 3,
+      "range": 4,
+      "shape": "area",
+      "radius": 1,
+      "signal_strength": 4,
+      "signal_duration": 2,
+      "description": "对目标区域造成震荡爆破。"
+    },
+    {
+      "id": "short_blink",
+      "name": "短距跃迁",
+      "type": "逃生",
+      "cost": 3,
+      "cooldown": 3,
+      "range": 3,
+      "shape": "point",
+      "signal_strength": 4,
+      "signal_duration": 2,
+      "description": "跃迁到指定可通行格。"
+    },
+    {
+      "id": "reverse_trace",
+      "name": "轨迹反转",
+      "type": "干扰",
+      "cost": 3,
+      "cooldown": 3,
+      "range": 4,
+      "shape": "area",
+      "radius": 1,
+      "signal_strength": 3,
+      "signal_duration": 2,
+      "description": "在目标区域制造反向轨迹。"
+    },
+    {
+      "id": "delay_mine",
+      "name": "延迟地雷",
+      "type": "攻击",
+      "cost": 5,
+      "cooldown": 4,
+      "range": 4,
+      "shape": "point",
+      "signal_strength": 4,
+      "signal_duration": 3,
+      "description": "在指定格布置延迟爆点。"
+    },
+    {
+      "id": "damage_buffer",
+      "name": "伤害缓冲",
+      "type": "防御",
+      "cost": 3,
+      "cooldown": 3,
+      "range": 0,
+      "shape": "self",
+      "signal_strength": 2,
+      "signal_duration": 2,
+      "description": "获得一次临时伤害缓冲。"
+    },
+    {
+      "id": "jam_cloud",
+      "name": "干扰云",
+      "type": "干扰",
+      "cost": 4,
+      "cooldown": 4,
+      "range": 4,
+      "shape": "area",
+      "radius": 2,
+      "signal_strength": 4,
+      "signal_duration": 3,
+      "description": "在目标区域释放持续干扰云。"
+    },
+    {
+      "id": "heavy_decoy",
+      "name": "大型诱饵",
+      "type": "干扰",
+      "cost": 4,
+      "cooldown": 4,
+      "range": 5,
+      "shape": "area",
+      "radius": 2,
+      "signal_strength": 5,
+      "signal_duration": 3,
+      "description": "制造高强度诱饵信号。"
+    }
+  ]
+}

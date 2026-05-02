@@ -7,6 +7,9 @@ texture = ExtResource("1_grid_atlas")
 texture_region_size = Vector2i(40, 40)
 0:0/0 = 0
 1:0/0 = 0
+2:0/0 = 0
+3:0/0 = 0
+4:0/0 = 0
 
 [resource]
 tile_size = Vector2i(40, 40)

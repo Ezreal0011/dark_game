@@ -16,8 +16,53 @@
   "move_signal_duration": 3,
   "scan_signal_duration": 2,
   "attack_signal_duration": 2,
+  "collect_signal_duration": 3,
+  "skill_pick_signal_duration": 3,
+  "resource_collect_gain": 4,
+  "skill_pick_cost": 1,
+  "collapse_start_turn": 4,
+  "collapse_interval_turns": 3,
+  "black_domain_base_penalty": 2,
+  "black_domain_penalty_per_stage": 1,
+  "initial_player_hp": 3,
+  "initial_npc_hp": 2,
+  "initial_npc_dark_energy": 4,
+  "npc_scan_range": 5,
   "player_start_x": 2,
   "player_start_y": 2,
   "npc_count": 3,
-  "use_authored_map": false
+  "use_authored_map": false,
+  "resource_points": [
+    {"x": 4, "y": 3, "energy": 4},
+    {"x": 14, "y": 5, "energy": 4},
+    {"x": 20, "y": 12, "energy": 4}
+  ],
+  "skill_points": [
+    {"x": 6, "y": 6, "level": 1},
+    {"x": 17, "y": 4, "level": 2},
+    {"x": 11, "y": 12, "level": 3},
+    {"x": 22, "y": 8, "level": 4}
+  ],
+  "silent_zones": [
+    {"x": 3, "y": 10},
+    {"x": 4, "y": 10},
+    {"x": 5, "y": 10},
+    {"x": 3, "y": 11},
+    {"x": 4, "y": 11},
+    {"x": 5, "y": 11}
+  ],
+  "echo_zones": [
+    {"x": 15, "y": 9},
+    {"x": 16, "y": 9},
+    {"x": 17, "y": 9},
+    {"x": 15, "y": 10},
+    {"x": 16, "y": 10},
+    {"x": 17, "y": 10}
+  ],
+  "npc_types": {
+    "侦察者": {"signal_weight": 4, "map_point_weight": 2},
+    "猎手": {"signal_weight": 5, "map_point_weight": 1},
+    "潜伏者": {"signal_weight": 2, "map_point_weight": 4},
+    "干扰者": {"signal_weight": 3, "map_point_weight": 3}
+  }
 }

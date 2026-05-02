@@ -50,6 +50,18 @@ theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(0.86, 0.94, 1, 1)
 text = "NPC：3"
 
+[node name="HpLabel" type="Label" parent="Root/TopBar"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.86, 0.94, 1, 1)
+text = "HP：3"
+
+[node name="CollapseLabel" type="Label" parent="Root/TopBar"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.62, 0.52, 1)
+text = "缩圈：3"
+
 [node name="ModeLabel" type="Label" parent="Root/TopBar"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
@@ -70,6 +82,16 @@ text = "扫描"
 layout_mode = 2
 custom_minimum_size = Vector2(76, 36)
 text = "攻击"
+
+[node name="CollectButton" type="Button" parent="Root/TopBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(76, 36)
+text = "采集"
+
+[node name="PickSkillButton" type="Button" parent="Root/TopBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(76, 36)
+text = "拾取"
 
 [node name="EndTurnButton" type="Button" parent="Root/TopBar"]
 layout_mode = 2
@@ -114,6 +136,96 @@ bbcode_enabled = false
 scroll_following = true
 theme_override_colors/default_color = Color(0.76, 0.9, 1, 1)
 
+[node name="TechPanel" type="PanelContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 16.0
+offset_top = 72.0
+offset_right = 300.0
+offset_bottom = 264.0
+mouse_filter = 2
+
+[node name="TechBox" type="VBoxContainer" parent="Root/TechPanel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="TechSummaryLabel" type="Label" parent="Root/TechPanel/TechBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.9, 0.96, 1, 1)
+text = "科技：侦察 Lv.1  移动 Lv.1  隐匿 Lv.1"
+autowrap_mode = 2
+
+[node name="GMButton" type="Button" parent="Root/TechPanel/TechBox"]
+layout_mode = 2
+toggle_mode = true
+text = "GM：关"
+
+[node name="ScoutTechButton" type="Button" parent="Root/TechPanel/TechBox"]
+layout_mode = 2
+text = "升级侦察"
+
+[node name="MoveTechButton" type="Button" parent="Root/TechPanel/TechBox"]
+layout_mode = 2
+text = "升级移动"
+
+[node name="StealthTechButton" type="Button" parent="Root/TechPanel/TechBox"]
+layout_mode = 2
+text = "升级隐匿"
+
+[node name="SkillChoicePanel" type="PanelContainer" parent="Root"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -120.0
+offset_right = 250.0
+offset_bottom = 130.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ChoiceBox" type="VBoxContainer" parent="Root/SkillChoicePanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ChoiceTitleLabel" type="Label" parent="Root/SkillChoicePanel/ChoiceBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.95, 0.86, 0.55, 1)
+horizontal_alignment = 1
+text = "选择一个技能"
+
+[node name="ChoiceButtons" type="VBoxContainer" parent="Root/SkillChoicePanel/ChoiceBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="MiniMapPanel" type="PanelContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -260.0
+offset_top = -210.0
+offset_right = -16.0
+offset_bottom = -100.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="MiniMapLabel" type="Label" parent="Root/MiniMapPanel"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.9, 0.96, 1, 1)
+text = "小地图：安全区尚未收缩"
+autowrap_mode = 2
+
 [node name="BottomBar" type="VBoxContainer" parent="Root"]
 layout_mode = 1
 anchors_preset = 12
@@ -121,13 +233,32 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 16.0
-offset_top = -82.0
+offset_top = -124.0
 offset_right = -16.0
 offset_bottom = -12.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_constants/separation = 8
 mouse_filter = 2
+
+[node name="SkillSlotRow" type="HBoxContainer" parent="Root/BottomBar"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SkillSlot1" type="Button" parent="Root/BottomBar/SkillSlotRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(150, 32)
+text = "技能槽 1：空"
+
+[node name="SkillSlot2" type="Button" parent="Root/BottomBar/SkillSlotRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(150, 32)
+text = "技能槽 2：空"
+
+[node name="SkillSlot3" type="Button" parent="Root/BottomBar/SkillSlotRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(150, 32)
+text = "技能槽 3：空"
 
 [node name="HoverLabel" type="Label" parent="Root/BottomBar"]
 layout_mode = 2
