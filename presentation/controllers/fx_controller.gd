@@ -26,6 +26,14 @@ func show_target_path(from_tile: Vector2i, target_tile: Vector2i, color: Color, 
 	if action_preview_layer != null and action_preview_layer.has_method("show_target_path"):
 		action_preview_layer.show_target_path(from_tile, target_tile, color, label_text)
 
+func show_move_path(from_tile: Vector2i, target_tile: Vector2i, cost: int) -> void:
+	if action_preview_layer != null and action_preview_layer.has_method("show_move_path"):
+		action_preview_layer.show_move_path(from_tile, target_tile, cost)
+
+func show_attack_prediction(from_tile: Vector2i, target_tile: Vector2i, hit_rate: int, in_range: bool) -> void:
+	if action_preview_layer != null and action_preview_layer.has_method("show_attack_prediction"):
+		action_preview_layer.show_attack_prediction(from_tile, target_tile, hit_rate, in_range)
+
 func add_affected_tiles(tiles: Array[Vector2i], fill_color: Color, line_color: Color) -> void:
 	if action_preview_layer != null and action_preview_layer.has_method("add_affected_tiles"):
 		action_preview_layer.add_affected_tiles(tiles, fill_color, line_color)

@@ -1,0 +1,19 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://presentation/ui/widgets/minimap_widget.gd" id="1_minimap_widget"]
+
+[node name="MiniMapPanel" type="PanelContainer"]
+custom_minimum_size = Vector2(204, 152)
+mouse_filter = 2
+
+[node name="Box" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="MiniMapWidget" type="Control" parent="Box"]
+custom_minimum_size = Vector2(180, 120)
+layout_mode = 2
+script = ExtResource("1_minimap_widget")
+
+[node name="Legend" type="Label" parent="Box"]
+layout_mode = 2
+text = "蓝=玩家 橙=NPC 黄=资源 紫=技能"

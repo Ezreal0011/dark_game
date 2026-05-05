@@ -38,9 +38,46 @@ func show_target_path(from_tile: Vector2i, target_tile: Vector2i, color: Color, 
 	if label_text != "":
 		_add_floating_label(to_pos + Vector2(20, -24), label_text, color)
 
+func show_move_path(from_tile: Vector2i, target_tile: Vector2i, cost: int) -> void:
+	clear()
+	if grid_map == null:
+		return
+	var from_pos := grid_map.grid_to_world(from_tile)
+	var to_pos := grid_map.grid_to_world(target_tile)
+	_add_dashed_line(from_pos, to_pos, Color(0.12, 0.82, 1.0, 0.92))
+	_add_target_bracket(target_tile, Color(0.12, 0.82, 1.0, 0.92))
+	_add_floating_label(to_pos + Vector2(18, -28), "移动预览\n消耗 %d 暗能" % cost, Color(0.70, 0.95, 1.0, 1.0))
+
+func show_attack_prediction(from_tile: Vector2i, target_tile: Vector2i, hit_rate: int, in_range: bool) -> void:
+	clear()
+	if grid_map == null:
+		return
+	var color := Color(1.0, 0.36, 0.10, 0.92) if in_range else Color(1.0, 0.08, 0.04, 0.88)
+	show_target_path(from_tile, target_tile, color, "预测攻击\n%d%% 命中" % hit_rate if in_range else "目标超出范围")
+
 func add_affected_tiles(tiles: Array[Vector2i], fill_color: Color, line_color: Color) -> void:
 	for tile in tiles:
 		_add_tile_plate(tile, fill_color, line_color)
+
+func _add_dashed_line(from_pos: Vector2, to_pos: Vector2, color: Color) -> void:
+	var delta := to_pos - from_pos
+	var length := delta.length()
+	if length <= 1.0:
+		return
+	var dir := delta / length
+	var dash := 12.0
+	var gap := 7.0
+	var cursor := 0.0
+	while cursor < length:
+		var start: Vector2 = from_pos + dir * cursor
+		var end_pos: Vector2 = from_pos + dir * min(cursor + dash, length)
+		var line := Line2D.new()
+		line.width = 3.0
+		line.default_color = color
+		line.add_point(start)
+		line.add_point(end_pos)
+		add_child(line)
+		cursor += dash + gap
 
 func _add_tile_plate(tile: Vector2i, fill_color: Color, line_color: Color) -> void:
 	if grid_map == null:

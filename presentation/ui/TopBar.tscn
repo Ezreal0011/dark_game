@@ -1,0 +1,22 @@
+[gd_scene format=3]
+
+[node name="TopBar" type="PanelContainer"]
+custom_minimum_size = Vector2(560, 44)
+mouse_filter = 2
+
+[node name="Content" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 18
+alignment = 1
+
+[node name="RoundLabel" type="Label" parent="Content"]
+layout_mode = 2
+text = "第 1 回合"
+
+[node name="CollapseLabel" type="Label" parent="Content"]
+layout_mode = 2
+text = "安全区收缩中"
+
+[node name="TimerLabel" type="Label" parent="Content"]
+layout_mode = 2
+text = "00:38"

@@ -1,22 +1,22 @@
 {
   "safe": {
-    "fill": "#003B5A22",
-    "border": "#00C8FFFF",
+    "fill": "#00A8FF29",
+    "border": "#00DCFFFF",
     "label": "安全区"
   },
   "silent": {
-    "fill": "#006DAD33",
-    "border": "#00B8FFFF",
+    "fill": "#0080FF57",
+    "border": "#14D1FFFF",
     "label": "静默区"
   },
   "echo": {
-    "fill": "#B75A0033",
-    "border": "#FF7A1AFF",
+    "fill": "#FF61005C",
+    "border": "#FF9414FF",
     "label": "回声区"
   },
   "black": {
-    "fill": "#5A050538",
-    "border": "#FF3B35FF",
+    "fill": "#FF0A0557",
+    "border": "#FF2914FF",
     "label": "黑域"
   }
 }

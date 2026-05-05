@@ -74,8 +74,8 @@ script = ExtResource("19_fx_controller")
 script = ExtResource("20_minimap_controller")
 
 [node name="GridMap" type="TileMapLayer" parent="."]
-position = Vector2(279, 116)
-scale = Vector2(0.78, 0.78)
+position = Vector2(160, 72)
+scale = Vector2(0.92, 0.92)
 tile_set = ExtResource("4_grid_tileset")
 script = ExtResource("6_grid_map")
 

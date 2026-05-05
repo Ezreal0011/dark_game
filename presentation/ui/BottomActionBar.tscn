@@ -1,0 +1,26 @@
+[gd_scene format=3]
+
+[node name="BottomActionBar" type="PanelContainer"]
+custom_minimum_size = Vector2(520, 62)
+mouse_filter = 2
+
+[node name="Actions" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="MoveButton" type="Button" parent="Actions"]
+layout_mode = 2
+text = "待机 +1"
+
+[node name="ScanButton" type="Button" parent="Actions"]
+layout_mode = 2
+text = "扫描 -2"
+
+[node name="AttackButton" type="Button" parent="Actions"]
+layout_mode = 2
+text = "攻击 -3"
+
+[node name="EndButton" type="Button" parent="Actions"]
+layout_mode = 2
+text = "结束"

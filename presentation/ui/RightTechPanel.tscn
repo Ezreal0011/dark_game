@@ -1,0 +1,28 @@
+[gd_scene format=3]
+
+[node name="RightTechPanel" type="PanelContainer"]
+custom_minimum_size = Vector2(160, 230)
+mouse_filter = 2
+
+[node name="TechList" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Title" type="Label" parent="TechList"]
+layout_mode = 2
+text = "科技栈"
+
+[node name="ScoutCard" type="Button" parent="TechList"]
+layout_mode = 2
+custom_minimum_size = Vector2(132, 46)
+text = "侦察 Lv.1"
+
+[node name="MoveCard" type="Button" parent="TechList"]
+layout_mode = 2
+custom_minimum_size = Vector2(132, 46)
+text = "移动 Lv.1"
+
+[node name="StealthCard" type="Button" parent="TechList"]
+layout_mode = 2
+custom_minimum_size = Vector2(132, 46)
+text = "隐匿 Lv.1"

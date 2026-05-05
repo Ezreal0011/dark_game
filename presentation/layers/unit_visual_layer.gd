@@ -1,6 +1,10 @@
 class_name UnitVisualLayer
 extends Node2D
 
+const UNIT_PLAYER := preload("res://assets/units/unit_player.png")
+const UNIT_ENEMY := preload("res://assets/units/unit_enemy.png")
+const UNIT_UNKNOWN := preload("res://assets/units/unit_unknown.png")
+
 var game_controller: GameController
 var grid_map: DarkSignalGridMap
 
@@ -18,98 +22,67 @@ func refresh() -> void:
 		if not bool(npc.get("alive", false)):
 			continue
 		var npc_tile: Vector2i = npc.get("tile", Vector2i.ZERO)
-		if not game_controller.gm_show_npcs and game_controller._distance(game_controller.player_tile, npc_tile) > 1:
+		var nearby := game_controller._distance(game_controller.player_tile, npc_tile) <= 1
+		if not game_controller.gm_show_npcs and not nearby:
 			continue
-		_add_npc_unit(npc)
+		_add_npc_unit(npc, nearby)
 
 func clear() -> void:
 	for child in get_children():
 		child.queue_free()
 
 func _add_player_unit(tile: Vector2i, hp: int) -> void:
-	var root := Node2D.new()
-	root.position = grid_map.grid_to_world(tile)
-	add_child(root)
+	var root := _add_root(tile)
 	_add_selection_glow(root, Color(0.08, 0.78, 1.0, 0.23), Color(0.0, 0.82, 1.0, 0.85))
-	_add_ship_marker(root, Color(0.10, 0.78, 1.0, 0.96), Color(0.58, 0.94, 1.0, 1.0), false)
-	_add_status_bar(root, "信号 玩家", hp, 3, Color(0.1, 0.82, 1.0, 1.0), Vector2(-33, -38))
+	_add_sprite(root, UNIT_PLAYER, 0.34)
+	_add_status_bar(root, "信号 玩家1", hp, 3, Color(0.1, 0.82, 1.0, 1.0), Vector2(-36, -40))
 
-func _add_npc_unit(npc: Dictionary) -> void:
-	var root := Node2D.new()
+func _add_npc_unit(npc: Dictionary, nearby: bool) -> void:
 	var tile: Vector2i = npc.get("tile", Vector2i.ZERO)
+	var root := _add_root(tile)
+	var visible_as_enemy := game_controller.gm_show_npcs or nearby
+	var line := Color(1.0, 0.58, 0.25, 1.0) if visible_as_enemy else Color(0.78, 0.92, 1.0, 0.92)
+	_add_selection_glow(root, Color(1.0, 0.28, 0.06, 0.16), line)
+	_add_sprite(root, UNIT_ENEMY if visible_as_enemy else UNIT_UNKNOWN, 0.34)
+	if game_controller.gm_show_npcs:
+		_add_status_bar(root, "%s %s" % [String(npc.get("id", "NPC")), String(npc.get("type", ""))], int(npc.get("hp", 1)), 2, line, Vector2(-44, -40))
+	else:
+		_add_status_bar(root, "威胁", int(npc.get("hp", 1)), 2, line, Vector2(-24, -38))
+
+func _add_root(tile: Vector2i) -> Node2D:
+	var root := Node2D.new()
 	root.position = grid_map.grid_to_world(tile)
 	add_child(root)
-	var revealed := not game_controller.gm_show_npcs
-	var fill := Color(1.0, 0.36, 0.10, 0.95) if revealed else Color(1.0, 0.74, 0.14, 0.82)
-	var line := Color(1.0, 0.58, 0.25, 1.0) if revealed else Color(1.0, 0.88, 0.36, 0.92)
-	_add_selection_glow(root, Color(1.0, 0.28, 0.06, 0.16), line)
-	_add_ship_marker(root, fill, line, true)
-	if game_controller.gm_show_npcs:
-		_add_status_bar(root, "%s %s" % [String(npc.get("id", "NPC")), String(npc.get("type", ""))], int(npc.get("hp", 1)), 2, line, Vector2(-42, -38))
-	else:
-		_add_status_bar(root, "威胁", int(npc.get("hp", 1)), 2, line, Vector2(-24, -36))
+	return root
+
+func _add_sprite(root: Node2D, texture: Texture2D, sprite_scale: float) -> void:
+	var sprite := Sprite2D.new()
+	sprite.texture = texture
+	sprite.scale = Vector2.ONE * sprite_scale
+	root.add_child(sprite)
 
 func _add_selection_glow(root: Node2D, fill_color: Color, line_color: Color) -> void:
 	var plate := Polygon2D.new()
 	plate.color = fill_color
 	plate.polygon = PackedVector2Array([
-		Vector2(0, -21),
-		Vector2(21, 0),
-		Vector2(0, 21),
-		Vector2(-21, 0)
+		Vector2(0, -22),
+		Vector2(22, 0),
+		Vector2(0, 22),
+		Vector2(-22, 0)
 	])
 	root.add_child(plate)
 	var ring := Line2D.new()
 	ring.width = 2.0
 	ring.default_color = line_color
 	ring.closed = true
-	ring.points = PackedVector2Array([
-		Vector2(0, -22),
-		Vector2(22, 0),
-		Vector2(0, 22),
-		Vector2(-22, 0)
-	])
+	ring.points = plate.polygon
 	root.add_child(ring)
-
-func _add_ship_marker(root: Node2D, fill_color: Color, line_color: Color, hostile: bool) -> void:
-	var body := Polygon2D.new()
-	body.color = fill_color
-	if hostile:
-		body.polygon = PackedVector2Array([
-			Vector2(0, -15),
-			Vector2(14, 13),
-			Vector2(0, 7),
-			Vector2(-14, 13)
-		])
-	else:
-		body.polygon = PackedVector2Array([
-			Vector2(0, -17),
-			Vector2(15, 12),
-			Vector2(0, 6),
-			Vector2(-15, 12)
-		])
-	root.add_child(body)
-	var outline := Line2D.new()
-	outline.width = 2.0
-	outline.default_color = line_color
-	outline.closed = true
-	outline.points = body.polygon
-	root.add_child(outline)
-	var core := Polygon2D.new()
-	core.color = Color(0.02, 0.05, 0.08, 0.76)
-	core.polygon = PackedVector2Array([
-		Vector2(0, -7),
-		Vector2(6, 5),
-		Vector2(0, 2),
-		Vector2(-6, 5)
-	])
-	root.add_child(core)
 
 func _add_status_bar(root: Node2D, text: String, hp: int, max_hp: int, color: Color, offset: Vector2) -> void:
 	var label := Label.new()
 	label.text = text
 	label.position = offset
-	label.size = Vector2(92, 16)
+	label.size = Vector2(96, 16)
 	label.add_theme_font_size_override("font_size", 11)
 	label.add_theme_color_override("font_color", color)
 	label.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.8))

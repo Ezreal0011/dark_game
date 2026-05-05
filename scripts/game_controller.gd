@@ -620,9 +620,12 @@ func _show_attack_target_preview(target_tile: Vector2i) -> void:
 	_show_attack_range()
 	if not grid_map.is_inside(target_tile):
 		return
-	if _distance(player_tile, target_tile) <= attack_range:
+	var distance_to_target := _distance(player_tile, target_tile)
+	var in_range := distance_to_target <= attack_range
+	var hit_rate := clampi(86 - max(0, distance_to_target - 1) * 4, 58, 86)
+	_presentation_show_attack_prediction(target_tile, hit_rate, in_range)
+	if in_range:
 		_add_skill_preview_marker(target_tile, Color(1.0, 0.18, 0.05, 0.48))
-		_presentation_show_attack_target(target_tile)
 
 func _show_skill_cast_range(skill: Dictionary) -> void:
 	_clear_skill_preview()
@@ -862,7 +865,9 @@ func _update_hover(tile: Vector2i) -> void:
 	move_preview.visible = can_preview
 	if can_preview:
 		move_preview.position = grid_map.grid_to_local_center(tile)
-		hud.set_action_hint("移动预览：目标 %s，消耗 %d 暗能。" % [_tile_text(tile), _distance(player_tile, tile) * turn_manager.move_cost])
+		var preview_cost := _distance(player_tile, tile) * turn_manager.move_cost
+		_presentation_show_move_preview(tile, preview_cost)
+		hud.set_action_hint("移动预览：目标 %s，消耗 %d 暗能。" % [_tile_text(tile), preview_cost])
 	if action_mode == "skill" and selected_skill_id != "":
 		_show_skill_target_preview(skill_manager.get_skill(selected_skill_id), tile)
 	if action_mode == "attack":
@@ -1130,6 +1135,14 @@ func _presentation_show_attack_range() -> void:
 func _presentation_show_attack_target(target_tile: Vector2i) -> void:
 	if presentation != null and presentation.has_method("show_attack_target"):
 		presentation.show_attack_target(player_tile, target_tile)
+
+func _presentation_show_move_preview(target_tile: Vector2i, cost: int) -> void:
+	if presentation != null and presentation.has_method("show_move_preview"):
+		presentation.show_move_preview(player_tile, target_tile, cost)
+
+func _presentation_show_attack_prediction(target_tile: Vector2i, hit_rate: int, in_range: bool) -> void:
+	if presentation != null and presentation.has_method("show_attack_prediction"):
+		presentation.show_attack_prediction(player_tile, target_tile, hit_rate, in_range)
 
 func _presentation_show_skill_range(skill: Dictionary) -> void:
 	if presentation != null and presentation.has_method("show_skill_range"):

@@ -42,6 +42,12 @@ func show_attack_range(tiles: Array[Vector2i]) -> void:
 func show_attack_target(from_tile: Vector2i, target_tile: Vector2i) -> void:
 	fx_controller.show_target_path(from_tile, target_tile, Color(1.0, 0.36, 0.10, 0.90), "探测攻击")
 
+func show_move_preview(from_tile: Vector2i, target_tile: Vector2i, cost: int) -> void:
+	fx_controller.show_move_path(from_tile, target_tile, cost)
+
+func show_attack_prediction(from_tile: Vector2i, target_tile: Vector2i, hit_rate: int, in_range: bool) -> void:
+	fx_controller.show_attack_prediction(from_tile, target_tile, hit_rate, in_range)
+
 func show_skill_range(tiles: Array[Vector2i], skill_name: String) -> void:
 	fx_controller.show_range(tiles, Color(0.70, 0.20, 1.0, 0.13), Color(0.82, 0.34, 1.0, 0.72), skill_name)
 
