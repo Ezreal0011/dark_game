@@ -2,6 +2,7 @@ class_name HUD
 extends CanvasLayer
 
 const ICON_MANIFEST := "res://presentation/resources/icon_manifest.json"
+const MINIMAP_WIDGET_SCRIPT := preload("res://presentation/ui/widgets/minimap_widget.gd")
 
 signal wait_pressed
 signal scan_pressed
@@ -48,6 +49,17 @@ signal gm_toggled(enabled: bool)
 var action_button_row: HBoxContainer
 var left_info_panel: PanelContainer
 var left_info_label: Label
+var minimap_widget: MiniMapWidget
+var tech_levels := {
+	"scout": 1,
+	"move": 1,
+	"stealth": 1
+}
+var tech_upgrade_enabled := {
+	"scout": false,
+	"move": false,
+	"stealth": false
+}
 var icon_manifest: Dictionary = {}
 
 func _ready() -> void:
@@ -93,7 +105,19 @@ func set_collapse(next_in: int, safe_text: String) -> void:
 	mini_map_label.text = "小地图\n%s\n黑域层数：%s" % [safe_text, collapse_label.text]
 
 func set_tech_summary(text: String) -> void:
-	tech_summary_label.text = "科技：" + text
+	tech_summary_label.text = "科技栈"
+
+func set_tech_cards(scout_level: int, move_level: int, stealth_level: int) -> void:
+	tech_levels["scout"] = scout_level
+	tech_levels["move"] = move_level
+	tech_levels["stealth"] = stealth_level
+	_refresh_tech_button_texts()
+
+func set_minimap_state(state: Dictionary) -> void:
+	if minimap_widget != null:
+		minimap_widget.set_state(state)
+	var safe_text := String(state.get("safe_text", "安全区：未知"))
+	mini_map_label.text = "小地图\n%s\n蓝=玩家 橙=NPC 黄=资源 紫=技能" % safe_text
 
 func set_gm_enabled(enabled: bool) -> void:
 	gm_button.set_pressed_no_signal(enabled)
@@ -155,6 +179,11 @@ func add_log(text: String) -> void:
 func show_center_notice(text: String) -> void:
 	center_notice.text = text
 	center_notice.visible = true
+	center_notice.modulate = Color(0.75, 0.96, 1.0, 0.0)
+	center_notice.scale = Vector2.ONE * 0.92
+	var tween := create_tween()
+	tween.tween_property(center_notice, "modulate", Color(0.92, 0.98, 1.0, 1.0), 0.12)
+	tween.parallel().tween_property(center_notice, "scale", Vector2.ONE, 0.12)
 
 func hide_center_notice() -> void:
 	center_notice.visible = false
@@ -190,6 +219,10 @@ func set_tech_buttons_state(can_scout: bool, can_move: bool, can_stealth: bool) 
 	move_tech_button.disabled = not can_move
 	stealth_tech_button.disabled = not can_stealth
 	gm_button.disabled = false
+	tech_upgrade_enabled["scout"] = can_scout
+	tech_upgrade_enabled["move"] = can_move
+	tech_upgrade_enabled["stealth"] = can_stealth
+	_refresh_tech_button_texts()
 
 func is_screen_point_over_hud(screen_point: Vector2) -> bool:
 	var viewport_size := get_viewport().get_visible_rect().size
@@ -198,8 +231,9 @@ func is_screen_point_over_hud(screen_point: Vector2) -> bool:
 	var in_log := false
 	var in_left := screen_point.x < 150.0 and screen_point.y > 64.0 and screen_point.y < 200.0
 	var in_tech := screen_point.x > viewport_size.x - 160.0 and screen_point.y > 52.0 and screen_point.y < 266.0
+	var in_minimap := screen_point.x > viewport_size.x - 220.0 and screen_point.y > viewport_size.y - 176.0
 	var in_choice := skill_choice_panel.visible and screen_point.x > viewport_size.x * 0.5 - 270.0 and screen_point.x < viewport_size.x * 0.5 + 270.0 and screen_point.y > viewport_size.y * 0.5 - 140.0 and screen_point.y < viewport_size.y * 0.5 + 150.0
-	return in_top or in_bottom or in_log or in_left or in_tech or in_choice
+	return in_top or in_bottom or in_log or in_left or in_tech or in_minimap or in_choice
 
 func _apply_m9_layout() -> void:
 	_rebuild_left_info_panel()
@@ -272,6 +306,7 @@ func _layout_bottom_action_bar() -> void:
 	collect_button.text = "采集"
 	pick_skill_button.text = "技能"
 	end_turn_button.text = "结束"
+	_apply_action_button_texts()
 
 func _layout_right_tech_panel() -> void:
 	tech_summary_label.text = "科技栈"
@@ -282,15 +317,24 @@ func _layout_right_tech_panel() -> void:
 	tech_panel.offset_right = -16.0
 	tech_panel.offset_bottom = 252.0
 	for button in [gm_button, scout_tech_button, move_tech_button, stealth_tech_button]:
-		button.custom_minimum_size = Vector2(108, 34)
+		button.custom_minimum_size = Vector2(108, 48)
+	_refresh_tech_button_texts()
 
 func _layout_minimap() -> void:
 	var panel: PanelContainer = $Root/MiniMapPanel
-	panel.offset_left = -148.0
-	panel.offset_top = -156.0
+	panel.offset_left = -220.0
+	panel.offset_top = -176.0
 	panel.offset_right = -16.0
 	panel.offset_bottom = -24.0
-	mini_map_label.custom_minimum_size = Vector2(108, 112)
+	mini_map_label.custom_minimum_size = Vector2(180, 34)
+	mini_map_label.add_theme_font_size_override("font_size", 12)
+	if minimap_widget == null:
+		minimap_widget = MINIMAP_WIDGET_SCRIPT.new() as MiniMapWidget
+		minimap_widget.name = "MiniMapWidget"
+		minimap_widget.custom_minimum_size = Vector2(180, 120)
+		var parent: Node = mini_map_label.get_parent()
+		parent.add_child(minimap_widget)
+		parent.move_child(minimap_widget, 0)
 
 func _layout_log_panel() -> void:
 	var panel: PanelContainer = $Root/LogPanel
@@ -307,6 +351,7 @@ func _apply_m9_theme() -> void:
 		_style_button(button, Color(0.0, 0.78, 1.0, 1.0))
 	for button in skill_slot_buttons:
 		_style_button(button, Color(0.72, 0.35, 1.0, 1.0))
+	_style_status_labels()
 
 func _style_panel(panel: Control) -> void:
 	var style := StyleBoxFlat.new()
@@ -328,6 +373,17 @@ func _style_button(button: Button, accent: Color) -> void:
 	button.add_theme_color_override("font_color", Color(0.82, 0.96, 1.0, 1.0))
 	button.add_theme_color_override("font_disabled_color", Color(0.38, 0.48, 0.52, 1.0))
 	button.add_theme_font_size_override("font_size", 15)
+	button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+
+func _style_status_labels() -> void:
+	for label in [title_label, turn_label, energy_label, unit_label, hp_label, collapse_label, mode_label, hover_label, action_hint_label, mini_map_label, tech_summary_label]:
+		label.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.78))
+		label.add_theme_constant_override("shadow_offset_x", 1)
+		label.add_theme_constant_override("shadow_offset_y", 1)
+		label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	center_notice.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.90))
+	center_notice.add_theme_constant_override("shadow_offset_x", 2)
+	center_notice.add_theme_constant_override("shadow_offset_y", 2)
 
 func _button_style(bg: Color, border: Color, alpha: float) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -366,3 +422,28 @@ func _load_json(path: String) -> Dictionary:
 	var file := FileAccess.open(path, FileAccess.READ)
 	var parsed = JSON.parse_string(file.get_as_text())
 	return parsed if typeof(parsed) == TYPE_DICTIONARY else {}
+
+func _apply_action_button_texts() -> void:
+	wait_button.text = "待机 +1"
+	scan_button.text = "扫描 -2"
+	attack_button.text = "攻击 -3"
+	collect_button.text = "采集"
+	pick_skill_button.text = "技能"
+	end_turn_button.text = "结束"
+	wait_button.tooltip_text = "跳过行动并恢复暗能"
+	scan_button.tooltip_text = "以玩家为中心扫描并留下信号"
+	attack_button.tooltip_text = "选择范围内格子进行探测攻击"
+	collect_button.tooltip_text = "在资源点上采集暗能"
+	pick_skill_button.tooltip_text = "在技能点上拾取技能"
+	end_turn_button.tooltip_text = "结束玩家回合，结算 NPC"
+
+func _refresh_tech_button_texts() -> void:
+	_set_tech_button_text(scout_tech_button, "侦察", "scout")
+	_set_tech_button_text(move_tech_button, "移动", "move")
+	_set_tech_button_text(stealth_tech_button, "隐匿", "stealth")
+
+func _set_tech_button_text(button: Button, display_name: String, tech_id: String) -> void:
+	var level := int(tech_levels.get(tech_id, 1))
+	var state_text := "可升级" if bool(tech_upgrade_enabled.get(tech_id, false)) else "锁定"
+	button.text = "%s Lv.%d\n%s" % [display_name, level, state_text]
+	button.tooltip_text = "%s科技 Lv.%d，当前状态：%s" % [display_name, level, state_text]

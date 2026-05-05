@@ -67,6 +67,8 @@ func _ready() -> void:
 	_redraw_signals()
 	_bind_presentation()
 	_refresh_presentation()
+	scan_range_layer.visible = false
+	skill_preview_layer.visible = false
 	hud.setup(String(config.get("game_title", "暗林信号")), turn_manager.current_turn, turn_manager.dark_energy, turn_manager.max_dark_energy, _living_npc_count())
 	hud.wait_pressed.connect(_on_wait_pressed)
 	hud.scan_pressed.connect(_on_scan_pressed)
@@ -156,6 +158,7 @@ func _try_scan(_target_tile: Vector2i) -> void:
 	_clear_skill_preview()
 	_show_scan_range()
 	_play_scan_pulse()
+	_presentation_play_scan()
 	_redraw_signals()
 	_refresh_hud()
 	hud.set_mode("移动")
@@ -186,6 +189,7 @@ func _try_attack(target_tile: Vector2i) -> void:
 	if not hit:
 		hud.add_log("攻击 %s 未命中。" % _tile_text(target_tile))
 	_play_attack_feedback(target_tile, hit)
+	_presentation_play_attack(target_tile, hit)
 	move_preview.visible = false
 	_clear_scan_range()
 	_clear_move_options()
@@ -256,6 +260,7 @@ func _on_collect_pressed() -> void:
 	signal_manager.add_collect_signal(player_tile, grid_map.is_echo_zone(player_tile))
 	_redraw_map_points()
 	_redraw_signals()
+	_presentation_play_collect(gained)
 	_clear_scan_range()
 	_clear_move_options()
 	_clear_skill_preview()
@@ -280,6 +285,7 @@ func _on_pick_skill_pressed() -> void:
 	signal_manager.add_skill_pick_signal(player_tile, level, grid_map.is_echo_zone(player_tile))
 	_redraw_map_points()
 	_redraw_signals()
+	_presentation_play_skill_pick(level)
 	_clear_scan_range()
 	_clear_move_options()
 	_clear_skill_preview()
@@ -483,6 +489,8 @@ func _get_black_domain_tiles() -> Array[Vector2i]:
 
 func _update_player_position() -> void:
 	player.position = grid_map.grid_to_local_center(player_tile)
+	player.visible = false
+	_refresh_presentation()
 
 func _update_npc_markers() -> void:
 	for child in npc_layer.get_children():
@@ -508,6 +516,8 @@ func _update_npc_markers() -> void:
 			label.position = marker.position + Vector2(-32, 14)
 			label.size = Vector2(64, 34)
 			npc_layer.add_child(label)
+	npc_layer.visible = false
+	_refresh_presentation()
 
 func _redraw_signals() -> void:
 	for child in signal_layer.get_children():
@@ -604,6 +614,7 @@ func _show_attack_range() -> void:
 	_clear_skill_preview()
 	for tile in _get_tiles_in_range(player_tile, attack_range):
 		_add_skill_preview_marker(tile, Color(1.0, 0.28, 0.12, 0.18))
+	_presentation_show_attack_range()
 
 func _show_attack_target_preview(target_tile: Vector2i) -> void:
 	_show_attack_range()
@@ -611,11 +622,13 @@ func _show_attack_target_preview(target_tile: Vector2i) -> void:
 		return
 	if _distance(player_tile, target_tile) <= attack_range:
 		_add_skill_preview_marker(target_tile, Color(1.0, 0.18, 0.05, 0.48))
+		_presentation_show_attack_target(target_tile)
 
 func _show_skill_cast_range(skill: Dictionary) -> void:
 	_clear_skill_preview()
 	for tile in _get_tiles_in_range(player_tile, int(skill.get("range", 0))):
 		_add_skill_preview_marker(tile, Color(0.84, 0.24, 1.0, 0.20))
+	_presentation_show_skill_range(skill)
 
 func _show_skill_target_preview(skill: Dictionary, target_tile: Vector2i) -> void:
 	_show_skill_cast_range(skill)
@@ -624,10 +637,12 @@ func _show_skill_target_preview(skill: Dictionary, target_tile: Vector2i) -> voi
 	var affected_tiles := _get_skill_affected_tiles(skill, target_tile)
 	for tile in affected_tiles:
 		_add_skill_preview_marker(tile, Color(1.0, 0.25, 0.55, 0.42))
+	_presentation_show_skill_target(skill, target_tile, affected_tiles)
 
 func _clear_skill_preview() -> void:
 	for child in skill_preview_layer.get_children():
 		child.queue_free()
+	_presentation_clear_action_preview()
 
 func _add_skill_preview_marker(tile: Vector2i, color: Color) -> void:
 	var marker := Polygon2D.new()
@@ -637,6 +652,7 @@ func _add_skill_preview_marker(tile: Vector2i, color: Color) -> void:
 	skill_preview_layer.add_child(marker)
 
 func _play_skill_feedback(tiles: Array[Vector2i], skill_type: String) -> void:
+	_presentation_play_skill(tiles, skill_type)
 	for tile in tiles:
 		var pulse := Polygon2D.new()
 		pulse.color = Color(1.0, 0.24, 0.48, 0.58) if skill_type == "攻击" else Color(0.58, 0.28, 1.0, 0.50)
@@ -649,6 +665,7 @@ func _play_skill_feedback(tiles: Array[Vector2i], skill_type: String) -> void:
 		tween.tween_callback(pulse.queue_free)
 
 func _play_npc_move_feedback(from_tile: Vector2i, to_tile: Vector2i) -> void:
+	_presentation_play_npc_move(from_tile, to_tile)
 	var from_pos := grid_map.grid_to_local_center(from_tile)
 	var to_pos := grid_map.grid_to_local_center(to_tile)
 	var line := Line2D.new()
@@ -741,6 +758,8 @@ func _redraw_map_points() -> void:
 		var point: Dictionary = grid_map.skill_points[point_tile]
 		var level := int(point.get("level", 1))
 		_add_point_marker(point_tile, Color(0.78, 0.22, 1.0, 0.92), "Lv.%d" % level)
+	point_layer.visible = false
+	_refresh_presentation()
 
 func _add_point_marker(tile: Vector2i, color: Color, label_text: String) -> void:
 	var marker := Polygon2D.new()
@@ -760,12 +779,14 @@ func _add_point_marker(tile: Vector2i, color: Color, label_text: String) -> void
 
 func _show_scan_range() -> void:
 	_clear_scan_range()
-	for tile in _get_scan_range_tiles():
+	var tiles := _get_scan_range_tiles()
+	for tile in tiles:
 		var marker := Polygon2D.new()
 		marker.color = Color(0.62, 0.28, 1.0, 0.20)
 		marker.polygon = PackedVector2Array([Vector2(-19, -19), Vector2(19, -19), Vector2(19, 19), Vector2(-19, 19)])
 		marker.position = grid_map.grid_to_local_center(tile)
 		scan_range_layer.add_child(marker)
+	_presentation_show_scan_range(tiles)
 
 func _play_scan_pulse() -> void:
 	var pulse := Polygon2D.new()
@@ -781,6 +802,7 @@ func _play_scan_pulse() -> void:
 func _clear_scan_range() -> void:
 	for child in scan_range_layer.get_children():
 		child.queue_free()
+	_presentation_clear_action_preview()
 
 func _get_scan_range_tiles() -> Array[Vector2i]:
 	var tiles: Array[Vector2i] = []
@@ -880,6 +902,12 @@ func _refresh_action_states() -> void:
 func _refresh_skill_hud() -> void:
 	hud.update_skill_slots(skill_manager.get_owned_skills())
 	hud.set_tech_summary(skill_manager.get_tech_summary())
+	if hud.has_method("set_tech_cards"):
+		hud.set_tech_cards(
+			skill_manager.get_tech_level("scout"),
+			skill_manager.get_tech_level("move"),
+			skill_manager.get_tech_level("stealth")
+		)
 
 func _check_game_result() -> bool:
 	if game_over:
@@ -1086,3 +1114,51 @@ func _bind_presentation() -> void:
 func _refresh_presentation() -> void:
 	if presentation != null and presentation.has_method("refresh_all"):
 		presentation.refresh_all()
+
+func _presentation_clear_action_preview() -> void:
+	if presentation != null and presentation.has_method("clear_action_preview"):
+		presentation.clear_action_preview()
+
+func _presentation_show_scan_range(tiles: Array[Vector2i]) -> void:
+	if presentation != null and presentation.has_method("show_scan_range"):
+		presentation.show_scan_range(tiles)
+
+func _presentation_show_attack_range() -> void:
+	if presentation != null and presentation.has_method("show_attack_range"):
+		presentation.show_attack_range(_get_tiles_in_range(player_tile, attack_range))
+
+func _presentation_show_attack_target(target_tile: Vector2i) -> void:
+	if presentation != null and presentation.has_method("show_attack_target"):
+		presentation.show_attack_target(player_tile, target_tile)
+
+func _presentation_show_skill_range(skill: Dictionary) -> void:
+	if presentation != null and presentation.has_method("show_skill_range"):
+		presentation.show_skill_range(_get_tiles_in_range(player_tile, int(skill.get("range", 0))), String(skill.get("name", "技能范围")))
+
+func _presentation_show_skill_target(skill: Dictionary, target_tile: Vector2i, affected_tiles: Array[Vector2i]) -> void:
+	if presentation != null and presentation.has_method("show_skill_target"):
+		presentation.show_skill_target(player_tile, target_tile, affected_tiles)
+
+func _presentation_play_scan() -> void:
+	if presentation != null and presentation.has_method("play_scan"):
+		presentation.play_scan(player_tile, scan_range)
+
+func _presentation_play_attack(target_tile: Vector2i, hit: bool) -> void:
+	if presentation != null and presentation.has_method("play_attack"):
+		presentation.play_attack(player_tile, target_tile, hit)
+
+func _presentation_play_collect(amount: int) -> void:
+	if presentation != null and presentation.has_method("play_collect"):
+		presentation.play_collect(player_tile, amount)
+
+func _presentation_play_skill_pick(level: int) -> void:
+	if presentation != null and presentation.has_method("play_skill_pick"):
+		presentation.play_skill_pick(player_tile, level)
+
+func _presentation_play_skill(tiles: Array[Vector2i], skill_type: String) -> void:
+	if presentation != null and presentation.has_method("play_skill"):
+		presentation.play_skill(tiles, skill_type)
+
+func _presentation_play_npc_move(from_tile: Vector2i, to_tile: Vector2i) -> void:
+	if presentation != null and presentation.has_method("play_npc_move"):
+		presentation.play_npc_move(from_tile, to_tile)
