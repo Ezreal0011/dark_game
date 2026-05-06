@@ -142,6 +142,28 @@ func is_passable(tile: Vector2i) -> bool:
 func grid_to_world(tile: Vector2i) -> Vector2:
 	return to_global(map_to_local(tile))
 
+func grid_corner_to_world(corner: Vector2) -> Vector2:
+	var grid_origin := map_to_local(Vector2i.ZERO) - Vector2(tile_size, tile_size) * 0.5
+	return to_global(grid_origin + corner * float(tile_size))
+
+func grid_cell_corners_world(tile: Vector2i) -> PackedVector2Array:
+	var x := float(tile.x)
+	var y := float(tile.y)
+	return PackedVector2Array([
+		grid_corner_to_world(Vector2(x, y)),
+		grid_corner_to_world(Vector2(x + 1.0, y)),
+		grid_corner_to_world(Vector2(x + 1.0, y + 1.0)),
+		grid_corner_to_world(Vector2(x, y + 1.0))
+	])
+
+func grid_rect_corners_world(start: Vector2i, end: Vector2i) -> PackedVector2Array:
+	return PackedVector2Array([
+		grid_corner_to_world(Vector2(float(start.x), float(start.y))),
+		grid_corner_to_world(Vector2(float(end.x), float(start.y))),
+		grid_corner_to_world(Vector2(float(end.x), float(end.y))),
+		grid_corner_to_world(Vector2(float(start.x), float(end.y)))
+	])
+
 func grid_to_local_center(tile: Vector2i) -> Vector2:
 	return map_to_local(tile)
 

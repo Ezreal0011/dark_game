@@ -11,6 +11,8 @@ func _init() -> void:
 	failed = failed or not _test_black_domain_damage()
 	failed = failed or not _test_black_domain_after_turn_income()
 	failed = failed or not _test_black_domain_stage_scaling()
+	failed = failed or not _test_delayed_move_signal_visibility()
+	failed = failed or not _test_npc_move_signal_public_after_delay()
 	if failed:
 		quit(1)
 	else:
@@ -33,10 +35,12 @@ func _test_zone_rules() -> bool:
 	elif grid.get_zone_type(echo_tile) != "echo":
 		passed = _fail("回声区格子类型应为 echo")
 
-	signal_manager.callv("add_move_signal", [echo_tile, grid.is_echo_zone(echo_tile)])
+	signal_manager.add_move_signal(Vector2i(6, 4), echo_tile, grid.is_echo_zone(echo_tile))
+	for i in range(3):
+		signal_manager.decay_signals()
 	var records := signal_manager.get_visible_signals(Vector2i(0, 0), 1)
 	if passed and (records.size() != 1 or not bool(records[0]["public"])):
-		passed = _fail("回声区行动应生成全图公开信号")
+		passed = _fail("回声区移动轨迹应在延迟后生成全图公开信号")
 	grid.free()
 	signal_manager.free()
 	return passed
@@ -106,6 +110,51 @@ func _test_black_domain_stage_scaling() -> bool:
 	if passed and (turn.dark_energy != 0 or hp != 2):
 		passed = _fail("黑域后期应造成更高 HP 损失")
 	turn.free()
+	return passed
+
+func _test_delayed_move_signal_visibility() -> bool:
+	var signal_manager := SignalManagerScript.new()
+	signal_manager.setup(_config())
+	var tile := Vector2i(2, 2)
+	var from_tile := Vector2i(1, 2)
+	var passed := true
+	signal_manager.add_move_signal(from_tile, tile, true)
+	if signal_manager.get_visible_signals(Vector2i.ZERO, 10).size() != 0:
+		passed = _fail("移动轨迹不应在产生回合立刻显示")
+	signal_manager.decay_signals()
+	if passed and signal_manager.get_visible_signals(Vector2i.ZERO, 10).size() != 0:
+		passed = _fail("移动轨迹不应在下一回合立刻显示")
+	signal_manager.decay_signals()
+	if passed and signal_manager.get_visible_signals(Vector2i.ZERO, 10).size() != 0:
+		passed = _fail("移动轨迹不应在第二回合显示")
+	signal_manager.decay_signals()
+	var visible := signal_manager.get_visible_signals(Vector2i.ZERO, 10)
+	if passed and (visible.size() != 1 or visible[0].get("tile", Vector2i.ZERO) != tile):
+		passed = _fail("移动轨迹应在第三回合显示")
+	elif passed and (visible[0].get("from_tile", Vector2i.ZERO) != from_tile or visible[0].get("to_tile", Vector2i.ZERO) != tile):
+		passed = _fail("移动轨迹应保存起点和终点")
+	for i in range(2):
+		signal_manager.decay_signals()
+	if passed and signal_manager.get_visible_signals(Vector2i.ZERO, 10).size() != 0:
+		passed = _fail("移动轨迹应在 5 回合后消失")
+	signal_manager.free()
+	return passed
+
+func _test_npc_move_signal_public_after_delay() -> bool:
+	var signal_manager := SignalManagerScript.new()
+	signal_manager.setup(_config())
+	var from_tile := Vector2i(8, 7)
+	var to_tile := Vector2i(9, 7)
+	var passed := true
+	signal_manager.add_move_signal(from_tile, to_tile, true)
+	for i in range(3):
+		signal_manager.decay_signals()
+	var visible := signal_manager.get_visible_signals(Vector2i(0, 0), 1)
+	if visible.size() != 1:
+		passed = _fail("NPC 移动轨迹应在第三回合显示在公共地图上")
+	elif not bool(visible[0].get("public", false)):
+		passed = _fail("NPC 移动轨迹应为公共轨迹")
+	signal_manager.free()
 	return passed
 
 func _config() -> Dictionary:

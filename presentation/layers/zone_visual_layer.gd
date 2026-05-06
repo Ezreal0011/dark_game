@@ -34,7 +34,6 @@ func refresh() -> void:
 	if grid_map == null:
 		return
 	tile_size = grid_map.tile_size
-	scaled_tile = Vector2(tile_size * grid_map.scale.x, tile_size * grid_map.scale.y)
 	z_index = 18
 	_clear_labels()
 	queue_redraw()
@@ -58,11 +57,7 @@ func _draw_safe_bounds() -> void:
 	var end := Vector2i(grid_map.map_width - layer, grid_map.map_height - layer)
 	if end.x <= start.x or end.y <= start.y:
 		return
-	var origin := _tile_top_left(start)
-	var size := Vector2(float(end.x - start.x) * scaled_tile.x, float(end.y - start.y) * scaled_tile.y)
-	var rect := Rect2(origin, size)
-	draw_rect(rect, SAFE_FILL, true)
-	draw_rect(rect, SAFE_BORDER, false, 0.8)
+	_draw_polygon(grid_map.grid_rect_corners_world(start, end), SAFE_FILL, SAFE_BORDER, 0.8)
 
 func _draw_zone_cells(zone_type: String, fill: Color, border: Color) -> void:
 	for y in range(grid_map.map_height):
@@ -70,9 +65,7 @@ func _draw_zone_cells(zone_type: String, fill: Color, border: Color) -> void:
 			var tile := Vector2i(x, y)
 			if grid_map.get_zone_type(tile) != zone_type:
 				continue
-			var rect := Rect2(_tile_top_left(tile), scaled_tile)
-			draw_rect(rect, fill, true)
-			draw_rect(rect, border, false, 0.8)
+			_draw_polygon(grid_map.grid_cell_corners_world(tile), fill, border, 0.8)
 
 func _draw_black_warning_border() -> void:
 	var layer := grid_map.get_collapse_layer()
@@ -82,11 +75,13 @@ func _draw_black_warning_border() -> void:
 	var end := Vector2i(grid_map.map_width - layer, grid_map.map_height - layer)
 	if end.x <= start.x or end.y <= start.y:
 		return
-	var origin := _tile_top_left(start)
-	var size := Vector2(float(end.x - start.x) * scaled_tile.x, float(end.y - start.y) * scaled_tile.y)
-	var rect := Rect2(origin, size)
-	draw_rect(rect, Color(1.0, 0.10, 0.04, 0.035), true)
-	draw_rect(rect, BLACK_BORDER, false, 0.9)
+	_draw_polygon(grid_map.grid_rect_corners_world(start, end), Color(1.0, 0.10, 0.04, 0.035), BLACK_BORDER, 0.9)
+
+func _draw_polygon(points: PackedVector2Array, fill: Color, border: Color, width: float) -> void:
+	draw_colored_polygon(points, fill)
+	var closed := PackedVector2Array(points)
+	closed.append(points[0])
+	draw_polyline(closed, border, width)
 
 func _rebuild_labels() -> void:
 	if grid_map == null or label_layer == null:
@@ -139,6 +134,3 @@ func _clear_labels() -> void:
 		return
 	for child in label_layer.get_children():
 		child.queue_free()
-
-func _tile_top_left(tile: Vector2i) -> Vector2:
-	return grid_map.grid_to_world(tile) - scaled_tile * 0.5

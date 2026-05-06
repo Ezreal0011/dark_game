@@ -23,6 +23,7 @@ var player_tile := Vector2i(2, 2)
 var hovered_tile := Vector2i(-1, -1)
 var npcs: Array[Dictionary] = []
 var player_has_acted := false
+var player_has_moved_this_turn := false
 var resolving_npc_turn := false
 var game_over := false
 var action_mode := "move"
@@ -101,7 +102,7 @@ func _process(_delta: float) -> void:
 		_update_hover(tile)
 
 func _input(event: InputEvent) -> void:
-	if game_over or player_has_acted or resolving_npc_turn:
+	if game_over or resolving_npc_turn:
 		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		if hud.is_screen_point_over_hud(event.position):
@@ -117,6 +118,12 @@ func _handle_tile_click(target_tile: Vector2i) -> void:
 		_try_move_to(target_tile)
 
 func _try_move_to(target_tile: Vector2i) -> void:
+	if player_has_moved_this_turn:
+		hud.set_action_hint("本回合已经移动过一次。你仍可释放技能、升级科技或结束回合。")
+		return
+	if not _has_action_energy():
+		hud.set_action_hint("暗能已用完，请结束回合。")
+		return
 	if not grid_map.is_inside(target_tile):
 		hud.set_action_hint("目标不在地图内。")
 		return
@@ -131,10 +138,11 @@ func _try_move_to(target_tile: Vector2i) -> void:
 	if not turn_manager.try_spend_dark_energy(move_cost):
 		hud.set_action_hint("暗能不足，无法移动。")
 		return
+	var from_tile := player_tile
 	player_tile = target_tile
-	player_has_acted = true
+	player_has_moved_this_turn = true
 	action_mode = "move"
-	_add_move_signal_for_tile(player_tile)
+	_add_move_signal_for_path(from_tile, player_tile)
 	move_preview.visible = false
 	_clear_scan_range()
 	_clear_move_options()
@@ -146,10 +154,12 @@ func _try_move_to(target_tile: Vector2i) -> void:
 	hud.add_log("玩家移动到 %s，暗能 -%d，%s" % [_tile_text(player_tile), move_cost, _zone_log_text(player_tile)])
 
 func _try_scan(_target_tile: Vector2i) -> void:
+	if not _has_action_energy():
+		hud.set_action_hint("暗能已用完，请结束回合。")
+		return
 	if not turn_manager.try_spend_dark_energy(turn_manager.scan_cost):
 		hud.set_action_hint("暗能不足，无法扫描。")
 		return
-	player_has_acted = true
 	action_mode = "move"
 	signal_manager.add_scan_signal(player_tile)
 	_add_echo_broadcast_if_needed(player_tile, "扫描")
@@ -166,6 +176,9 @@ func _try_scan(_target_tile: Vector2i) -> void:
 	hud.add_log("玩家扫描，暗能 -%d，生成扫描信号。" % turn_manager.scan_cost)
 
 func _try_attack(target_tile: Vector2i) -> void:
+	if not _has_action_energy():
+		hud.set_action_hint("暗能已用完，请结束回合。")
+		return
 	if not grid_map.is_inside(target_tile):
 		hud.set_action_hint("攻击目标不在地图内。")
 		return
@@ -175,7 +188,6 @@ func _try_attack(target_tile: Vector2i) -> void:
 	if not turn_manager.try_spend_dark_energy(turn_manager.attack_cost):
 		hud.set_action_hint("暗能不足，无法攻击。")
 		return
-	player_has_acted = true
 	action_mode = "move"
 	signal_manager.add_attack_signal(player_tile)
 	_add_echo_broadcast_if_needed(player_tile, "攻击")
@@ -216,6 +228,9 @@ func _on_gm_toggled(enabled: bool) -> void:
 func _on_wait_pressed() -> void:
 	if game_over or resolving_npc_turn:
 		return
+	if not _has_action_energy():
+		hud.set_action_hint("暗能已用完，请结束回合。")
+		return
 	if player_has_acted:
 		hud.set_action_hint("本回合已经行动，不能再次等待。")
 		return
@@ -232,12 +247,12 @@ func _on_wait_pressed() -> void:
 	hud.add_log("玩家等待，暗能 +%d。" % gained)
 
 func _on_scan_pressed() -> void:
-	if game_over or player_has_acted or resolving_npc_turn:
+	if not _can_player_continue():
 		return
 	_try_scan(player_tile)
 
 func _on_attack_pressed() -> void:
-	if game_over or player_has_acted or resolving_npc_turn:
+	if not _can_player_continue():
 		return
 	action_mode = "attack"
 	selected_skill_id = ""
@@ -248,14 +263,13 @@ func _on_attack_pressed() -> void:
 	hud.set_action_hint("攻击模式：点击你预测的 NPC 格子。范围 %d，消耗 %d 暗能。" % [attack_range, turn_manager.attack_cost])
 
 func _on_collect_pressed() -> void:
-	if game_over or player_has_acted or resolving_npc_turn:
+	if not _can_player_continue():
 		return
 	if not grid_map.has_resource_point(player_tile):
 		hud.set_action_hint("当前位置没有资源点。")
 		return
 	var point := grid_map.collect_resource_point(player_tile)
 	var gained := turn_manager.add_dark_energy(int(point.get("energy", 4)))
-	player_has_acted = true
 	action_mode = "move"
 	signal_manager.add_collect_signal(player_tile, grid_map.is_echo_zone(player_tile))
 	_redraw_map_points()
@@ -270,7 +284,7 @@ func _on_collect_pressed() -> void:
 	hud.add_log("玩家采集资源点，暗能 +%d，资源点熄灭。" % gained)
 
 func _on_pick_skill_pressed() -> void:
-	if game_over or player_has_acted or resolving_npc_turn:
+	if not _can_player_continue():
 		return
 	if not grid_map.has_skill_point(player_tile):
 		hud.set_action_hint("当前位置没有技能点。")
@@ -280,7 +294,6 @@ func _on_pick_skill_pressed() -> void:
 		return
 	var point := grid_map.pick_skill_point(player_tile)
 	var level := int(point.get("level", 1))
-	player_has_acted = true
 	action_mode = "move"
 	signal_manager.add_skill_pick_signal(player_tile, level, grid_map.is_echo_zone(player_tile))
 	_redraw_map_points()
@@ -307,7 +320,7 @@ func _on_skill_choice_pressed(skill_id: String) -> void:
 	_auto_hide_notice()
 
 func _on_skill_slot_pressed(slot_index: int) -> void:
-	if game_over or player_has_acted or resolving_npc_turn:
+	if not _can_player_continue():
 		return
 	var skills: Array[Dictionary] = skill_manager.get_owned_skills()
 	if slot_index >= skills.size():
@@ -328,7 +341,7 @@ func _on_skill_slot_pressed(slot_index: int) -> void:
 		hud.set_action_hint("技能模式：%s。点击范围内目标格释放，区域/直线范围已显示。" % String(skill.get("name", "技能")))
 
 func _on_tech_upgrade_pressed(tech_id: String) -> void:
-	if game_over or player_has_acted or resolving_npc_turn:
+	if not _can_player_continue():
 		return
 	if not skill_manager.can_upgrade_tech(tech_id, turn_manager.dark_energy):
 		hud.set_action_hint("暗能不足或该科技已满级。")
@@ -337,7 +350,6 @@ func _on_tech_upgrade_pressed(tech_id: String) -> void:
 	var cost := int(data.get("cost", 0))
 	if not turn_manager.try_spend_dark_energy(cost):
 		return
-	player_has_acted = true
 	action_mode = "move"
 	selected_skill_id = ""
 	_clear_skill_preview()
@@ -358,6 +370,7 @@ func _on_end_turn_pressed() -> void:
 	var gained := turn_manager.start_new_turn()
 	var black_domain_report := _apply_collapse_for_current_turn()
 	player_has_acted = false
+	player_has_moved_this_turn = false
 	resolving_npc_turn = false
 	action_mode = "move"
 	_clear_scan_range()
@@ -413,9 +426,8 @@ func _resolve_single_npc(npc: Dictionary) -> void:
 		hud.add_log("%s（%s）原地等待：%s。" % [String(npc["id"]), String(npc.get("type", "NPC")), String(decision.get("reason", "等待"))])
 	else:
 		npc["tile"] = target_tile
-		_play_npc_move_feedback(from_tile, target_tile)
 		if grid_map.should_leave_move_signal(target_tile):
-			signal_manager.add_move_signal(target_tile, grid_map.is_echo_zone(target_tile))
+			signal_manager.add_move_signal(from_tile, target_tile, true)
 			hud.add_log("%s（%s）%s，移动并留下轨迹。" % [String(npc["id"]), String(npc.get("type", "NPC")), String(decision.get("reason", "行动"))])
 		else:
 			hud.add_log("%s（%s）%s，进入静默区，未留下轨迹。" % [String(npc["id"]), String(npc.get("type", "NPC")), String(decision.get("reason", "行动"))])
@@ -523,6 +535,9 @@ func _redraw_signals() -> void:
 	for child in signal_layer.get_children():
 		child.queue_free()
 	for signal_record in signal_manager.get_visible_signals(player_tile, scan_range):
+		if String(signal_record["type"]) == "move":
+			_add_move_signal_path(signal_record)
+			continue
 		var tile: Vector2i = signal_record["tile"]
 		var strength := int(signal_record["strength"])
 		var marker := Polygon2D.new()
@@ -531,6 +546,38 @@ func _redraw_signals() -> void:
 		marker.polygon = PackedVector2Array([Vector2(-half, -half), Vector2(half, -half), Vector2(half, half), Vector2(-half, half)])
 		marker.position = grid_map.grid_to_local_center(tile)
 		signal_layer.add_child(marker)
+
+func _add_move_signal_path(signal_record: Dictionary) -> void:
+	var from_tile: Vector2i = signal_record.get("from_tile", signal_record.get("tile", Vector2i.ZERO))
+	var to_tile: Vector2i = signal_record.get("to_tile", signal_record.get("tile", Vector2i.ZERO))
+	var from_pos := grid_map.grid_to_local_center(from_tile)
+	var to_pos := grid_map.grid_to_local_center(to_tile)
+	var public_signal := bool(signal_record.get("public", false))
+	var glow_color := Color(1.0, 0.62, 0.16, 0.34) if public_signal else Color(0.12, 0.78, 1.0, 0.28)
+	var core_color := Color(1.0, 0.72, 0.22, 0.58) if public_signal else Color(0.20, 0.86, 1.0, 0.48)
+	var glow := Line2D.new()
+	glow.width = 8.0
+	glow.default_color = glow_color
+	glow.add_point(from_pos)
+	glow.add_point(to_pos)
+	signal_layer.add_child(glow)
+	var core := Line2D.new()
+	core.width = 2.0
+	core.default_color = core_color
+	core.add_point(from_pos)
+	core.add_point(to_pos)
+	signal_layer.add_child(core)
+	var head := Polygon2D.new()
+	head.color = core_color
+	head.polygon = PackedVector2Array([
+		Vector2(0, -5),
+		Vector2(9, 0),
+		Vector2(0, 5),
+		Vector2(3, 0)
+	])
+	head.position = to_pos
+	head.rotation = (to_pos - from_pos).angle()
+	signal_layer.add_child(head)
 
 func _try_use_selected_skill(target_tile: Vector2i) -> void:
 	if selected_skill_id == "":
@@ -564,7 +611,6 @@ func _try_use_selected_skill(target_tile: Vector2i) -> void:
 		signal_manager.add_signal("skill", tile, signal_strength, signal_duration, grid_map.is_echo_zone(player_tile))
 	_play_skill_feedback(affected_tiles, String(skill.get("type", "技能")))
 	skill_manager.mark_skill_used(selected_skill_id)
-	player_has_acted = true
 	action_mode = "move"
 	selected_skill_id = ""
 	move_preview.visible = false
@@ -575,6 +621,7 @@ func _try_use_selected_skill(target_tile: Vector2i) -> void:
 	_redraw_signals()
 	_refresh_hud()
 	_refresh_skill_hud()
+	_refresh_move_options()
 	if hit_count > 0:
 		hud.add_log("释放 %s，命中 %d 个目标，暗能 -%d。" % [skill_name, hit_count, cost])
 	else:
@@ -818,7 +865,7 @@ func _get_scan_range_tiles() -> Array[Vector2i]:
 
 func _refresh_move_options() -> void:
 	_clear_move_options()
-	if player_has_acted or resolving_npc_turn:
+	if player_has_moved_this_turn or resolving_npc_turn:
 		return
 	if not turn_manager.can_spend_dark_energy(turn_manager.move_cost):
 		return
@@ -849,7 +896,7 @@ func _get_player_move_options() -> Array[Vector2i]:
 	return options
 
 func _update_hover(tile: Vector2i) -> void:
-	if player_has_acted or resolving_npc_turn:
+	if resolving_npc_turn:
 		move_preview.visible = false
 		return
 	if not grid_map.is_inside(tile):
@@ -861,7 +908,7 @@ func _update_hover(tile: Vector2i) -> void:
 	hud.set_hover_text("悬停格：%s 类型：%s %s %s" % [_tile_text(tile), _tile_type_name(String(tile_info["type"])), passable_text, _point_hover_text(tile)])
 	var can_preview := action_mode == "move" and grid_map.is_adjacent(player_tile, tile) and grid_map.is_passable(tile) and turn_manager.can_spend_dark_energy(turn_manager.move_cost)
 	if action_mode == "move":
-		can_preview = _distance(player_tile, tile) >= 1 and _distance(player_tile, tile) <= current_move_range and grid_map.is_passable(tile) and turn_manager.can_spend_dark_energy(_distance(player_tile, tile) * turn_manager.move_cost)
+		can_preview = not player_has_moved_this_turn and _distance(player_tile, tile) >= 1 and _distance(player_tile, tile) <= current_move_range and grid_map.is_passable(tile) and turn_manager.can_spend_dark_energy(_distance(player_tile, tile) * turn_manager.move_cost)
 	move_preview.visible = can_preview
 	if can_preview:
 		move_preview.position = grid_map.grid_to_local_center(tile)
@@ -872,7 +919,7 @@ func _update_hover(tile: Vector2i) -> void:
 		_show_skill_target_preview(skill_manager.get_skill(selected_skill_id), tile)
 	if action_mode == "attack":
 		_show_attack_target_preview(tile)
-	if action_mode == "move" and tile == player_tile and not player_has_acted:
+	if action_mode == "move" and tile == player_tile:
 		_update_current_tile_action_hint()
 
 func _show_player_turn_notice() -> void:
@@ -888,10 +935,11 @@ func _refresh_hud() -> void:
 	_refresh_action_states()
 
 func _refresh_action_states() -> void:
-	var can_use_action := not game_over and not resolving_npc_turn and not player_has_acted
+	var can_use_action := _can_player_continue()
+	var can_wait := can_use_action and not player_has_acted
 	var can_end_turn := not game_over and not resolving_npc_turn
 	hud.set_action_buttons_state(
-		can_use_action,
+		can_wait,
 		can_use_action and turn_manager.can_spend_dark_energy(turn_manager.scan_cost),
 		can_use_action and turn_manager.can_spend_dark_energy(turn_manager.attack_cost),
 		can_use_action and grid_map.has_resource_point(player_tile),
@@ -903,6 +951,12 @@ func _refresh_action_states() -> void:
 		can_use_action and skill_manager.can_upgrade_tech("move", turn_manager.dark_energy),
 		can_use_action and skill_manager.can_upgrade_tech("stealth", turn_manager.dark_energy)
 	)
+
+func _can_player_continue() -> bool:
+	return not game_over and not resolving_npc_turn and _has_action_energy()
+
+func _has_action_energy() -> bool:
+	return turn_manager.dark_energy > 0
 
 func _refresh_skill_hud() -> void:
 	hud.update_skill_slots(skill_manager.get_owned_skills())
@@ -992,9 +1046,9 @@ func _update_current_tile_action_hint() -> void:
 		var skill_point := grid_map.get_skill_point(player_tile)
 		hud.set_action_hint("当前位置有 Lv.%d 技能点，点击“拾取”打开三选一技能。" % int(skill_point.get("level", 1)))
 
-func _add_move_signal_for_tile(tile: Vector2i) -> void:
-	if grid_map.should_leave_move_signal(tile):
-		signal_manager.add_move_signal(tile, grid_map.is_echo_zone(tile))
+func _add_move_signal_for_path(from_tile: Vector2i, to_tile: Vector2i) -> void:
+	if grid_map.should_leave_move_signal(to_tile):
+		signal_manager.add_move_signal(from_tile, to_tile, grid_map.is_echo_zone(to_tile))
 
 func _add_echo_broadcast_if_needed(tile: Vector2i, action_name: String) -> void:
 	if grid_map.is_echo_zone(tile):

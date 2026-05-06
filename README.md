@@ -1,70 +1,83 @@
 # 暗林信号
 
-当前项目严格按照 PDF 的 M0-M8 顺序开发。
+Godot 4.6 制作的回合制战术原型。项目按 M0-M9 阶段推进，当前已完成第一版玩法闭环、Web 导出准备、M8 表现层精修，以及 M9 回合逻辑和延迟移动轨迹规则。
 
 ## 当前阶段
 
-M6：NPC AI。
-
 已完成：
 
-- M0 项目骨架。
-- M1 网格地图与移动。
-- M2 暗能、回合与基础 NPC。
-- M3 信号系统、NPC 默认隐藏、移动信号、扫描信号、攻击信号、信号衰减。
-- M4 资源点、技能点、静默区、回声区、缩圈黑域、攻击反馈。
-- M5 科技线、技能配置、三选一技能、技能槽、技能范围示意、释放反馈和冷却。
-- M6 NPC 类型 AI、基于信号/地图点/黑域的不作弊决策。
+- M0 项目骨架
+- M1 网格地图与移动
+- M2 暗能、回合与基础 NPC
+- M3 信号系统、NPC 默认隐藏、扫描/攻击/移动信号
+- M4 资源点、技能点、静默区、回声区、黑域收缩
+- M5 科技线、技能配置、三选一技能、技能槽、技能范围与冷却
+- M6 NPC 类型 AI、GM 显示开关、NPC 逐个行动
+- M7 交互反馈补齐
+- M8 Web 导出约束、最终自检、表现层与 HUD 精修
+- M9 玩家回合多操作、延迟移动轨迹、发光路径线轨迹
 
 ## 运行方式
 
-1. 使用 Godot 4.6 打开项目目录：`D:\GameC\dark\dark-f`
-2. 运行主场景：`res://scenes/Main.tscn`
+1. 使用 Godot 4.6 打开项目目录：
+   `D:\GameC\dark\dark-f`
+2. 运行主场景：
+   `res://scenes/Main.tscn`
 
-## M6 验收方式
+## 当前核心规则
 
-1. 地图上可看到黄色资源点、紫色技能点、蓝色静默区、橙色回声区。
-2. 移动到资源点格子后点击“采集”，获得暗能，资源点消失，并生成黄色采集信号。
-3. 移动到技能点格子后点击“拾取”，消耗暗能，技能点消失，生成紫色技能波动，并弹出 3 张技能卡。
-4. 选择技能卡后，技能进入底部技能槽；最多保留 3 个技能。
-5. 点击技能槽后，地图显示该技能的可释放范围；区域技能会额外显示影响范围。
-6. 点击目标格释放技能，技能消耗暗能、生成技能信号、播放释放反馈并进入冷却。
-7. 点击左侧科技按钮可升级侦察、移动、隐匿；升级有中心提示、日志和科技摘要刷新。
-8. 升级移动后，可移动格高亮范围会变大；升级侦察后扫描范围会变大；升级隐匿后技能信号强度降低。
-9. 移动到静默区时不生成移动轨迹；在回声区行动会生成公开广播信号。
-10. 缩圈倒计时归零后，地图外圈变为黑域；玩家和 NPC 在黑域内都会被腐蚀，黑域阶段越高腐蚀越强。
-11. 所有 NPC 被攻击或黑域清除后，中央显示“胜利”，按钮禁用，并在日志中写入胜利结算。
-12. NPC 会显示类型，包括侦察者、猎手、潜伏者、干扰者。
-13. NPC 不再随机行动，会优先脱离黑域，其次追踪可见信号，再争夺资源点/技能点，最后巡逻。
-14. NPC 决策日志会说明原因，例如“脱离黑域”“追踪可见信号”“争夺地图点”。
-15. NPC AI 不读取玩家真实位置，只读取可见信号、公开信号、地图点、黑域和自身可行动格。
+- 玩家每回合可以移动一次。
+- 移动后仍可继续扫描、攻击、释放技能、升级科技、采集资源、拾取技能点。
+- 玩家暗能为 0 时不能继续主动操作，只能结束回合。
+- 玩家手动点击“结束”后进入 NPC 回合。
+- NPC 会逐个行动，不会一次性全部移动完。
+- NPC AI 不读取玩家真实位置，只读取可见信号、公开信号、地图点、黑域和自身可行动格。
 
-## 配置表
+## 移动轨迹规则
 
-- `res://configs/game_config.json`：地图尺寸、暗能、点位、静默区、回声区、缩圈和黑域腐蚀参数。
-- `res://configs/skill_config.json`：技能池、技能名称、类型、消耗、冷却、范围、区域形状、信号强度和描述。
+- 玩家和 NPC 移动都不会立刻在地图上显示轨迹。
+- 静默区移动不留下移动轨迹。
+- 普通移动轨迹会被记录为从起点到终点的一条路径。
+- 移动轨迹不会在产生回合、下一回合、第二回合显示。
+- 移动轨迹会在第三回合显示。
+- 移动轨迹 5 回合后消失。
+- NPC 移动轨迹在延迟结束后会作为公共轨迹显示在地图上。
+- 移动轨迹表现为半透明发光路径线：
+  - 普通轨迹为青蓝色。
+  - 公开/回声轨迹为橙色。
+
+## 地图与点位
+
+- 主地图逻辑尺寸保持 24 x 16。
+- 地图可通过瓦片继续编辑铺设。
+- 资源点和技能点来自配置表。
+- 当前点位表现为轻量地图标记，不改变采集和拾取规则。
+
+## 配置文件
+
+- `res://configs/game_config.json`：地图尺寸、暗能、点位、区域、缩圈和黑域参数。
+- `res://configs/skill_config.json`：技能池、技能名称、类型、消耗、冷却、范围、信号强度和描述。
 - `res://configs/tech_config.json`：侦察、移动、隐匿科技等级、消耗和效果。
-- `res://configs/game_config.json` 中的 `npc_types`：NPC 类型和 AI 权重配置。
+
+## 测试
+
+常用回归测试：
+
+```powershell
+& 'D:\steam\steamapps\common\Godot Engine\godot.windows.opt.tools.64.exe' --headless --path 'D:\GameC\dark\dark-f' --script 'res://tests/m4_rules_test.gd'
+& 'D:\steam\steamapps\common\Godot Engine\godot.windows.opt.tools.64.exe' --headless --path 'D:\GameC\dark\dark-f' --script 'res://tests/m5_rules_test.gd'
+& 'D:\steam\steamapps\common\Godot Engine\godot.windows.opt.tools.64.exe' --headless --path 'D:\GameC\dark\dark-f' --script 'res://tests/m6_ai_test.gd'
+& 'D:\steam\steamapps\common\Godot Engine\godot.windows.opt.tools.64.exe' --headless --path 'D:\GameC\dark\dark-f' --script 'res://tests/m8_final_test.gd'
+& 'D:\steam\steamapps\common\Godot Engine\godot.windows.opt.tools.64.exe' --headless --path 'D:\GameC\dark\dark-f' --script 'res://tests/m9_tilt_transform_test.gd'
+```
 
 ## 开发日志
 
-所有阶段日志放在：
+阶段日志位于：
 
 `res://devlogs/`
 
-当前日志：
+当前新增日志：
 
-- `res://devlogs/M0_项目骨架_开发日志.md`
-- `res://devlogs/M1_网格地图与移动_开发日志.md`
-- `res://devlogs/M2_暗能回合与基础NPC_开发日志.md`
-- `res://devlogs/M3_信号系统_开发日志.md`
-- `res://devlogs/M4_地图机制_开发日志.md`
-- `res://devlogs/M5_科技与技能系统_开发日志.md`
-- `res://devlogs/M6_NPC_AI_开发日志.md`
-
-> GM 验收开关：左侧科技面板的“GM：关 / GM：开”只影响可视化。开启后会显示所有存活 NPC 的当前位置、编号和类型，方便观察 NPC 回合中的逐个移动；关闭后恢复普通游玩时的近距离暴露规则。
-
-> M7 已完成：补齐动态按钮状态、攻击范围示意、攻击目标悬停高亮、NPC 移动轨迹反馈、技能冷却禁用和行动后预览清理。下一步进入 M8 调参与最终验收。
-> 当前阶段：M8 调参与最终验收已完成。项目已具备 Web 导出预设、最终验收清单和 M8 自动自检测试；M0-M8 第一版玩法闭环已经跑通。
-
-> M8 已完成：新增 Web 导出预设 `export_presets.cfg`、最终验收清单 `docs/M8_最终验收清单.md`、M8 自动自检 `tests/m8_final_test.gd`，并完成 M4/M5/M6/M8 回归验证。
+- `res://devlogs/M9_回合逻辑与延迟轨迹记录.md`
+- `res://devlogs/M9_移动轨迹路径线记录.md`

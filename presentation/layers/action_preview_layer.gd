@@ -82,49 +82,24 @@ func _add_dashed_line(from_pos: Vector2, to_pos: Vector2, color: Color) -> void:
 func _add_tile_plate(tile: Vector2i, fill_color: Color, line_color: Color) -> void:
 	if grid_map == null:
 		return
-	var center := grid_map.grid_to_world(tile)
-	var half := 15.5
+	var corners := grid_map.grid_cell_corners_world(tile)
 	var plate := Polygon2D.new()
 	plate.color = fill_color
-	plate.polygon = PackedVector2Array([
-		Vector2(-half, -half),
-		Vector2(half, -half),
-		Vector2(half, half),
-		Vector2(-half, half)
-	])
-	plate.position = center
+	plate.polygon = corners
 	add_child(plate)
 	var border := Line2D.new()
 	border.width = 1.4
 	border.default_color = line_color
 	border.closed = true
-	border.points = PackedVector2Array([
-		center + Vector2(-half, -half),
-		center + Vector2(half, -half),
-		center + Vector2(half, half),
-		center + Vector2(-half, half)
-	])
+	border.points = corners
 	add_child(border)
 
 func _add_target_bracket(tile: Vector2i, color: Color) -> void:
-	var center := grid_map.grid_to_world(tile)
 	var bracket := Line2D.new()
 	bracket.width = 2.2
 	bracket.default_color = color
-	bracket.points = PackedVector2Array([
-		center + Vector2(-18, -10),
-		center + Vector2(-18, -18),
-		center + Vector2(-10, -18),
-		center + Vector2(10, -18),
-		center + Vector2(18, -18),
-		center + Vector2(18, -10),
-		center + Vector2(18, 10),
-		center + Vector2(18, 18),
-		center + Vector2(10, 18),
-		center + Vector2(-10, 18),
-		center + Vector2(-18, 18),
-		center + Vector2(-18, 10)
-	])
+	bracket.closed = true
+	bracket.points = grid_map.grid_cell_corners_world(tile)
 	add_child(bracket)
 
 func _add_floating_label(pos: Vector2, text: String, color: Color) -> void:

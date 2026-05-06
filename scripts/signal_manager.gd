@@ -6,27 +6,40 @@ var scan_signal_duration := 2
 var attack_signal_duration := 2
 var collect_signal_duration := 3
 var skill_pick_signal_duration := 3
+var move_signal_reveal_delay := 3
 
 var signals: Array[Dictionary] = []
 
 func setup(config: Dictionary) -> void:
-	move_signal_duration = int(config.get("move_signal_duration", move_signal_duration))
+	move_signal_duration = int(config.get("move_signal_lifetime_turns", 5))
+	move_signal_reveal_delay = int(config.get("move_signal_reveal_delay", move_signal_reveal_delay))
 	scan_signal_duration = int(config.get("scan_signal_duration", scan_signal_duration))
 	attack_signal_duration = int(config.get("attack_signal_duration", attack_signal_duration))
 	collect_signal_duration = int(config.get("collect_signal_duration", collect_signal_duration))
 	skill_pick_signal_duration = int(config.get("skill_pick_signal_duration", skill_pick_signal_duration))
 
-func add_signal(signal_type: String, tile: Vector2i, strength: int, duration: int, public_signal: bool = false) -> void:
+func add_signal(signal_type: String, tile: Vector2i, strength: int, duration: int, public_signal: bool = false, reveal_after: int = 0) -> void:
 	signals.append({
 		"type": signal_type,
 		"tile": tile,
 		"strength": strength,
 		"remaining": duration,
-		"public": public_signal
+		"public": public_signal,
+		"reveal_after": reveal_after
 	})
 
-func add_move_signal(tile: Vector2i, public_signal: bool = false) -> void:
-	add_signal("move", tile, 1, move_signal_duration, public_signal)
+func add_move_signal(from_tile: Vector2i, to_tile: Vector2i = Vector2i(-9999, -9999), public_signal: bool = false) -> void:
+	var actual_to := from_tile if to_tile == Vector2i(-9999, -9999) else to_tile
+	signals.append({
+		"type": "move",
+		"tile": actual_to,
+		"from_tile": from_tile,
+		"to_tile": actual_to,
+		"strength": 1,
+		"remaining": move_signal_duration,
+		"public": public_signal,
+		"reveal_after": move_signal_reveal_delay
+	})
 
 func add_scan_signal(tile: Vector2i) -> void:
 	add_signal("scan", tile, 3, scan_signal_duration)
@@ -44,6 +57,7 @@ func decay_signals() -> void:
 	var kept: Array[Dictionary] = []
 	for signal_record in signals:
 		signal_record["remaining"] = int(signal_record["remaining"]) - 1
+		signal_record["reveal_after"] = max(0, int(signal_record.get("reveal_after", 0)) - 1)
 		if int(signal_record["remaining"]) > 0:
 			kept.append(signal_record)
 	signals = kept
@@ -51,6 +65,8 @@ func decay_signals() -> void:
 func get_visible_signals(player_tile: Vector2i, scan_range: int) -> Array[Dictionary]:
 	var visible: Array[Dictionary] = []
 	for signal_record in signals:
+		if int(signal_record.get("reveal_after", 0)) > 0:
+			continue
 		if bool(signal_record["public"]):
 			visible.append(signal_record)
 			continue
